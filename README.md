@@ -2,30 +2,55 @@
 
 **Fyntra** — Finance, Intelligence and Traction.
 
-Sistema interno da RICOS para agentes de seguro de vida (National Life Group / Five Rings Financial / Alliance Group).
-
-## Escopo (MVP)
-
-- **Portal do Agente**: dashboard, hierarquia multinível (quem está debaixo de quem), clientes, apólices, comissões (diretas + override de downline).
-- **Portal do Cliente**: apólices próprias, status, documentos.
-- **Admin**: import de CSV (apólices/comissões), configuração de planos de comissão, gestão de usuários/hierarquia.
-
-Fora do MVP (fase 2): motor de quote/ilustração (Compulife para Term/Final Expense; embed de WinFlex/FireLight para IUL).
-
-## Stack
-
-- Next.js (App Router) + TypeScript
-- Prisma + PostgreSQL (self-hosted via Coolify — host `btdb`, banco `lifeos` — nome de infra herdado, o produto chama-se Fyntra)
-- Auth: Better Auth (self-hosted)
-- Deploy: Coolify (host `btapps`)
+Sistema interno da RICOS para agentes de seguro de vida (National Life Group / Five Rings Financial / Alliance Group): hierarquia multinível de agentes, comissionamento (direto + override de downline), gestão de apólices e clientes, tudo em um só lugar.
 
 ## Status
 
-Em fase de design — ver spec em `docs/`.
+MVP em produção, evoluindo por incremento. Entregue até agora:
+
+- Hierarquia multinível de agentes, comissão (direta + override), import de CSV, portais admin/agente/cliente, auth com papéis
+- Redesign completo de UI/UX (ver `PRODUCT.md` e `DESIGN.md` — sistema de design "The Ledger Room")
+- Detalhe de apólice com documentos (upload/download com controle de acesso)
+- Dashboard de carteira do agente (composição por status/carrier/produto, evolução mensal)
+- Alertas de risco (apólices paradas no funil, sem sinal de pagamento, ou que lapsaram recentemente)
+
+Specs e planos de cada entrega ficam em `docs/superpowers/specs/` e `docs/superpowers/plans/`.
+
+## Portais
+
+- **Portal do Agente** (`/agent`): dashboard com KPIs, composição da carteira, gráfico mensal e alertas de risco; clientes, apólices, comissões (diretas + override), hierarquia da downline.
+- **Portal do Cliente** (`/client`): apólices próprias (somente leitura), documentos.
+- **Admin** (`/admin`): import de CSV (apólices/comissões), configuração de planos de comissão, gestão de agentes/hierarquia.
+
+Fora de escopo por ora: comparação entre agentes/período (admin) e motor de illustration Term/Final Expense — próximos itens da fila (ver `docs/superpowers/plans/`).
+
+## Stack
+
+- Next.js 16 (App Router) + TypeScript
+- Prisma 6 + PostgreSQL (self-hosted via Coolify — host `btdb`, banco `lifeos` — nome de infra herdado, o produto chama-se Fyntra)
+- Auth: Better Auth (self-hosted)
+- Tailwind v4
+- Deploy: Coolify, container `lifeos` (host `btapps`)
 
 ## Desenvolvimento local
 
-Depois de `pnpm exec prisma db seed`, todos os usuários seedados (`admin@ricos.test`,
-`top@ricos.test`, `mid@ricos.test`, `leaf@ricos.test`, `client@ricos.test`) conseguem
-entrar em `/login` com a senha `password123`. Essa senha é **apenas para dev/seed** —
+```bash
+pnpm install
+cp .env.example .env   # ajuste DATABASE_URL e BETTER_AUTH_SECRET
+pnpm exec prisma migrate deploy
+pnpm exec prisma db seed
+pnpm dev
+```
+
+Depois do seed, todos os usuários seedados (`admin@ricos.test`, `top@ricos.test`,
+`mid@ricos.test`, `leaf@ricos.test`, `client@ricos.test`) conseguem entrar em
+`/login` com a senha `password123`. Essa senha é **apenas para dev/seed** —
 nunca use em produção.
+
+## Verificação antes de commitar
+
+```bash
+pnpm exec tsc --noEmit
+pnpm build
+pnpm exec vitest run
+```
