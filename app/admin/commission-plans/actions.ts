@@ -1,14 +1,12 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireRole } from '@/lib/require-role'
 import { revalidatePath } from 'next/cache'
 import { Prisma } from '@prisma/client'
 
 export async function createCommissionPlan(formData: FormData) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session) throw new Error('Not authenticated')
+  const session = await requireRole('ADMIN')
 
   const rank = formData.get('rank') as string
   const downlineLevel = Number(formData.get('downlineLevel'))

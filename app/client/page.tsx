@@ -1,12 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireRole } from '@/lib/require-role'
 
 export default async function ClientPortalPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session) throw new Error('Not authenticated')
+  const session = await requireRole('CLIENT', 'ADMIN')
 
   const client = await prisma.client.findUnique({ where: { userId: session.user.id } })
   if (!client) throw new Error('Signed-in user has no Client record')

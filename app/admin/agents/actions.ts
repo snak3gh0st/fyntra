@@ -1,17 +1,27 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
-import { headers } from 'next/headers'
+import { requireRole } from '@/lib/require-role'
+import { getDownlineIds } from '@/lib/hierarchy'
 import { revalidatePath } from 'next/cache'
 
 export async function updateAgentHierarchy(formData: FormData) {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session) throw new Error('Not authenticated')
+  const session = await requireRole('ADMIN')
 
   const agentId = formData.get('agentId') as string
   const parentAgentId = (formData.get('parentAgentId') as string) || null
   const rank = formData.get('rank') as string
+
+  if (parentAgentId) {
+    if (parentAgentId === agentId) {
+      throw new Error('An agent cannot report to itself')
+    }
+    const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
+    const downlineIds = getDownlineIds(allAgents, agentId)
+    if (downlineIds.includes(parentAgentId)) {
+      throw new Error('Cannot set parentAgentId to one of the agent\'s own descendants (would create a cycle)')
+    }
+  }
 
   const before = await prisma.agent.findUniqueOrThrow({ where: { id: agentId } })
   const after = await prisma.agent.update({
