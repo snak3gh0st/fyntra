@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 
 // Dev-only seed password for every seeded user. Never use this outside of
 // local/dev seeding — production users must set their own passwords.
-const SEED_PASSWORD = 'password123'
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? 'password123'
 
 /**
  * Better Auth's emailAndPassword auth needs a matching `account` row with a
@@ -86,7 +86,8 @@ async function main() {
   })
 
   console.log({ admin: admin.email, top: top.id, mid: mid.id, leaf: leaf.id })
-  console.log(`All seeded users can sign in at /login with password: ${SEED_PASSWORD}`)
+  const usedPasswordMessage = SEED_PASSWORD === 'password123' ? 'password123 (change in production)' : SEED_PASSWORD
+  console.log(`All seeded users can sign in at /login with password: ${usedPasswordMessage}`)
 }
 
 main()
