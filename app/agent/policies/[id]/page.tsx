@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { requireRole } from '@/lib/require-role'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { canAccessPolicy } from '@/lib/policy-access'
@@ -13,10 +14,7 @@ import { Button } from '@/components/Button'
 
 export default async function PolicyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const agent = await getCurrentAgent()
-  const user = await prisma.user.findUnique({ where: { id: agent.userId } })
-  const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
-  const scopeIds = [agent.id, ...getDownlineIds(allAgents, agent.id)]
+  const session = await requireRole('ADMIN', 'AGENT')
 
   const policy = await prisma.policy.findUnique({
     where: { id },
@@ -26,10 +24,19 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
       documents: true,
     },
   })
-  if (!policy || !canAccessPolicy({ role: 'AGENT', agentScopeIds: scopeIds }, policy)) notFound()
+  if (!policy) notFound()
+
+  let allowed = session.user.role === 'ADMIN'
+  if (session.user.role === 'AGENT') {
+    const agent = await getCurrentAgent()
+    const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
+    const scopeIds = [agent.id, ...getDownlineIds(allAgents, agent.id)]
+    allowed = canAccessPolicy({ role: 'AGENT', agentScopeIds: scopeIds }, policy)
+  }
+  if (!allowed) notFound()
 
   return (
-    <Shell role="AGENT" userName={user?.name ?? ''}>
+    <Shell role="AGENT" userName={session.user.name}>
       <a href="/agent/policies" className="text-sm font-semibold text-teal hover:text-teal-deep">
         ← Voltar
       </a>
