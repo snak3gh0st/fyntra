@@ -1,22 +1,44 @@
 import { PrismaClient } from '@prisma/client'
+import { auth } from '../lib/auth'
 
 const prisma = new PrismaClient()
 
-async function main() {
-  const admin = await prisma.user.create({
-    data: { email: 'admin@ricos.test', name: 'Admin RICOS', role: 'ADMIN' },
-  })
+// Dev-only seed password for every seeded user. Never use this outside of
+// local/dev seeding — production users must set their own passwords.
+const SEED_PASSWORD = 'password123'
 
-  const topUser = await prisma.user.create({
-    data: { email: 'top@ricos.test', name: 'Agente Topo', role: 'AGENT' },
+/**
+ * Better Auth's emailAndPassword auth needs a matching `account` row with a
+ * password hashed in Better Auth's own scheme (scrypt-based), not just a
+ * `user` row. Raw `prisma.user.create()` alone produces a user nobody can
+ * sign in as. The robust fix is to create users through Better Auth's own
+ * sign-up API (`auth.api.signUpEmail`) so the account/password hash is
+ * guaranteed to be in the format `signIn.email` expects — then patch the
+ * `role` with a follow-up `prisma.user.update`, since `role` is only
+ * reliably settable this way for a seed script that needs ADMIN/AGENT/CLIENT
+ * distributed across specific users (the additionalFields default is
+ * 'AGENT' for anyone signing up through the app UI).
+ */
+async function createUser(email: string, name: string, role: 'ADMIN' | 'AGENT' | 'CLIENT') {
+  const result = await auth.api.signUpEmail({
+    body: { email, name, password: SEED_PASSWORD, role },
   })
+  const user = await prisma.user.update({
+    where: { id: result.user.id },
+    data: { role },
+  })
+  return user
+}
+
+async function main() {
+  const admin = await createUser('admin@ricos.test', 'Admin RICOS', 'ADMIN')
+
+  const topUser = await createUser('top@ricos.test', 'Agente Topo', 'AGENT')
   const top = await prisma.agent.create({
     data: { userId: topUser.id, rank: 'DIRECTOR', npn: '1000001', status: 'ACTIVE' },
   })
 
-  const midUser = await prisma.user.create({
-    data: { email: 'mid@ricos.test', name: 'Agente Meio', role: 'AGENT' },
-  })
+  const midUser = await createUser('mid@ricos.test', 'Agente Meio', 'AGENT')
   const mid = await prisma.agent.create({
     data: {
       userId: midUser.id,
@@ -27,9 +49,7 @@ async function main() {
     },
   })
 
-  const leafUser = await prisma.user.create({
-    data: { email: 'leaf@ricos.test', name: 'Agente Base', role: 'AGENT' },
-  })
+  const leafUser = await createUser('leaf@ricos.test', 'Agente Base', 'AGENT')
   const leaf = await prisma.agent.create({
     data: {
       userId: leafUser.id,
@@ -47,9 +67,7 @@ async function main() {
     ],
   })
 
-  const clientUser = await prisma.user.create({
-    data: { email: 'client@ricos.test', name: 'Cliente Exemplo', role: 'CLIENT' },
-  })
+  const clientUser = await createUser('client@ricos.test', 'Cliente Exemplo', 'CLIENT')
   const client = await prisma.client.create({
     data: { userId: clientUser.id, name: 'Cliente Exemplo', assignedAgentId: leaf.id },
   })
@@ -68,6 +86,7 @@ async function main() {
   })
 
   console.log({ admin: admin.email, top: top.id, mid: mid.id, leaf: leaf.id })
+  console.log(`All seeded users can sign in at /login with password: ${SEED_PASSWORD}`)
 }
 
 main()

@@ -20,3 +20,10 @@ Fora do MVP (fase 2): motor de quote/ilustração (Compulife para Term/Final Exp
 ## Status
 
 Em fase de design — ver spec em `docs/`.
+
+## Desenvolvimento local
+
+Depois de `pnpm exec prisma db seed`, todos os usuários seedados (`admin@ricos.test`,
+`top@ricos.test`, `mid@ricos.test`, `leaf@ricos.test`, `client@ricos.test`) conseguem
+entrar em `/login` com a senha `password123`. Essa senha é **apenas para dev/seed** —
+nunca use em produção.
