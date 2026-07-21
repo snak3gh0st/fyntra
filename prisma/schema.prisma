@@ -11,3 +11,163 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  ADMIN
+  AGENT
+  CLIENT
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PolicyStatus {
+  PENDING
+  APPROVED
+  INFORCE
+  LAPSED
+  CANCELLED
+}
+
+enum CommissionType {
+  DIRECT
+  OVERRIDE
+}
+
+enum ImportType {
+  POLICIES
+  COMMISSIONS
+}
+
+enum ImportStatus {
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  role      Role
+  createdAt DateTime @default(now())
+
+  agent     Agent?
+  client    Client?
+  imports   ImportBatch[]
+  auditLogs AuditLog[]
+}
+
+model Agent {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id])
+  parentAgentId String?
+  parentAgent   Agent?      @relation("AgentHierarchy", fields: [parentAgentId], references: [id])
+  subAgents     Agent[]     @relation("AgentHierarchy")
+  rank          String
+  npn           String?     @unique
+  status        AgentStatus @default(ACTIVE)
+  createdAt     DateTime    @default(now())
+
+  clients           Client[]
+  policies          Policy[]
+  commissionRecords CommissionRecord[]
+
+  @@index([parentAgentId])
+}
+
+model Client {
+  id              String   @id @default(cuid())
+  userId          String?  @unique
+  user            User?    @relation(fields: [userId], references: [id])
+  name            String
+  email           String?
+  phone           String?
+  assignedAgentId String
+  assignedAgent   Agent    @relation(fields: [assignedAgentId], references: [id])
+  createdAt       DateTime @default(now())
+
+  policies Policy[]
+
+  @@index([assignedAgentId])
+}
+
+model Policy {
+  id            String        @id @default(cuid())
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id])
+  agentId       String
+  agent         Agent         @relation(fields: [agentId], references: [id])
+  carrier       String
+  product       String
+  policyNumber  String        @unique
+  faceAmount    Decimal
+  premium       Decimal
+  status        PolicyStatus
+  effectiveDate DateTime?
+  importBatchId String?
+  importBatch   ImportBatch?  @relation(fields: [importBatchId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  commissionRecords CommissionRecord[]
+
+  @@index([agentId])
+  @@index([clientId])
+}
+
+model CommissionPlan {
+  id              String  @id @default(cuid())
+  rank            String
+  downlineLevel   Int
+  overridePercent Decimal
+
+  @@unique([rank, downlineLevel])
+}
+
+model CommissionRecord {
+  id            String         @id @default(cuid())
+  policyId      String
+  policy        Policy         @relation(fields: [policyId], references: [id])
+  agentId       String
+  agent         Agent          @relation(fields: [agentId], references: [id])
+  amount        Decimal
+  type          CommissionType
+  level         Int            @default(0)
+  period        String
+  importBatchId String?
+  importBatch   ImportBatch?   @relation(fields: [importBatchId], references: [id])
+  createdAt     DateTime       @default(now())
+
+  @@index([agentId])
+  @@index([policyId])
+}
+
+model ImportBatch {
+  id           String       @id @default(cuid())
+  uploadedById String
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  filename     String
+  type         ImportType
+  status       ImportStatus @default(PROCESSING)
+  rowErrors    Json?
+  createdAt    DateTime     @default(now())
+
+  policies          Policy[]
+  commissionRecords CommissionRecord[]
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+}
