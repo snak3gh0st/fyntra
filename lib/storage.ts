@@ -4,7 +4,7 @@ import { dirname, join } from 'path'
 
 export function sanitizeFilename(name: string): string {
   const parts = name.split(/[/\\]/).filter((part) => part && part !== '..')
-  const base = parts.join('_') || name
+  const base = parts.join('_') || 'file'
   return base.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 

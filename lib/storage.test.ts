@@ -13,6 +13,11 @@ describe('sanitizeFilename', () => {
   it('leaves a simple safe filename unchanged', () => {
     expect(sanitizeFilename('contrato.pdf')).toBe('contrato.pdf')
   })
+
+  it('falls back to a safe name when the input is only path-traversal segments', () => {
+    expect(sanitizeFilename('..')).toBe('file')
+    expect(sanitizeFilename('../..')).toBe('file')
+  })
 })
 
 describe('buildStoredPath', () => {
