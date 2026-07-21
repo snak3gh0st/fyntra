@@ -114,8 +114,20 @@ export async function importCommissions(content: string, uploadedById: string, f
       continue
     }
 
-    await prisma.commissionRecord.create({
-      data: {
+    // Upsert (rather than create) on the compound unique key so re-uploading
+    // the same commission CSV updates existing records in place instead of
+    // duplicating money.
+    await prisma.commissionRecord.upsert({
+      where: {
+        policyId_agentId_period_type_level: {
+          policyId: policy.id,
+          agentId: agent.id,
+          period: row.period,
+          type: 'DIRECT',
+          level: 0,
+        },
+      },
+      create: {
         policyId: policy.id,
         agentId: agent.id,
         amount: row.amount,
@@ -124,18 +136,35 @@ export async function importCommissions(content: string, uploadedById: string, f
         period: row.period,
         importBatchId: batch.id,
       },
+      update: {
+        amount: row.amount,
+        importBatchId: batch.id,
+      },
     })
 
     const overrides = computeOverrides(allAgents, agent.id, row.amount, lookupPlan)
     for (const override of overrides) {
-      await prisma.commissionRecord.create({
-        data: {
+      await prisma.commissionRecord.upsert({
+        where: {
+          policyId_agentId_period_type_level: {
+            policyId: policy.id,
+            agentId: override.agentId,
+            period: row.period,
+            type: 'OVERRIDE',
+            level: override.level,
+          },
+        },
+        create: {
           policyId: policy.id,
           agentId: override.agentId,
           amount: override.amount,
           type: 'OVERRIDE',
           level: override.level,
           period: row.period,
+          importBatchId: batch.id,
+        },
+        update: {
+          amount: override.amount,
           importBatchId: batch.id,
         },
       })

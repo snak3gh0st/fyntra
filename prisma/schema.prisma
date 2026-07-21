@@ -149,6 +149,7 @@ model CommissionRecord {
   importBatch   ImportBatch?   @relation(fields: [importBatchId], references: [id])
   createdAt     DateTime       @default(now())
 
+  @@unique([policyId, agentId, period, type, level])
   @@index([agentId])
   @@index([policyId])
 }
