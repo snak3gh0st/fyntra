@@ -55,15 +55,16 @@ model User {
   role      Role
   createdAt DateTime @default(now())
 
-  agent         Agent?
-  client        Client?
-  imports       ImportBatch[]
-  auditLogs     AuditLog[]
-  emailVerified Boolean       @default(false)
-  image         String?
-  updatedAt     DateTime      @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  agent             Agent?
+  client            Client?
+  imports           ImportBatch[]
+  auditLogs         AuditLog[]
+  emailVerified     Boolean            @default(false)
+  image             String?
+  updatedAt         DateTime           @updatedAt
+  sessions          Session[]
+  accounts          Account[]
+  uploadedDocuments PolicyDocument[]
 
   @@map("user")
 }
@@ -121,6 +122,7 @@ model Policy {
   createdAt     DateTime     @default(now())
 
   commissionRecords CommissionRecord[]
+  documents         PolicyDocument[]
 
   @@index([agentId])
   @@index([clientId])
@@ -166,6 +168,21 @@ model ImportBatch {
 
   policies          Policy[]
   commissionRecords CommissionRecord[]
+}
+
+model PolicyDocument {
+  id           String   @id @default(cuid())
+  policyId     String
+  policy       Policy   @relation(fields: [policyId], references: [id])
+  filename     String
+  storedPath   String
+  mimeType     String
+  sizeBytes    Int
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([policyId])
 }
 
 model AuditLog {
