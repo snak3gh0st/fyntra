@@ -1,9 +1,11 @@
 import { prisma } from '@/lib/prisma'
+import { requireRole } from '@/lib/require-role'
 import { createCommissionPlan } from './actions'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CommissionPlansPage() {
+  await requireRole('ADMIN')
   const plans = await prisma.commissionPlan.findMany({ orderBy: [{ rank: 'asc' }, { downlineLevel: 'asc' }] })
 
   return (

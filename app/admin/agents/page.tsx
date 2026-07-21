@@ -1,9 +1,11 @@
 import { prisma } from '@/lib/prisma'
+import { requireRole } from '@/lib/require-role'
 import { updateAgentHierarchy } from './actions'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AgentsPage() {
+  await requireRole('ADMIN')
   const agents = await prisma.agent.findMany({ include: { user: true }, orderBy: { createdAt: 'asc' } })
 
   return (
