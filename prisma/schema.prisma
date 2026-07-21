@@ -55,10 +55,17 @@ model User {
   role      Role
   createdAt DateTime @default(now())
 
-  agent     Agent?
-  client    Client?
-  imports   ImportBatch[]
-  auditLogs AuditLog[]
+  agent         Agent?
+  client        Client?
+  imports       ImportBatch[]
+  auditLogs     AuditLog[]
+  emailVerified Boolean       @default(false)
+  image         String?
+  updatedAt     DateTime      @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
 }
 
 model Agent {
@@ -97,21 +104,21 @@ model Client {
 }
 
 model Policy {
-  id            String        @id @default(cuid())
+  id            String       @id @default(cuid())
   clientId      String
-  client        Client        @relation(fields: [clientId], references: [id])
+  client        Client       @relation(fields: [clientId], references: [id])
   agentId       String
-  agent         Agent         @relation(fields: [agentId], references: [id])
+  agent         Agent        @relation(fields: [agentId], references: [id])
   carrier       String
   product       String
-  policyNumber  String        @unique
+  policyNumber  String       @unique
   faceAmount    Decimal
   premium       Decimal
   status        PolicyStatus
   effectiveDate DateTime?
   importBatchId String?
-  importBatch   ImportBatch?  @relation(fields: [importBatchId], references: [id])
-  createdAt     DateTime      @default(now())
+  importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id])
+  createdAt     DateTime     @default(now())
 
   commissionRecords CommissionRecord[]
 
@@ -170,4 +177,52 @@ model AuditLog {
   before    Json?
   after     Json?
   createdAt DateTime @default(now())
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
