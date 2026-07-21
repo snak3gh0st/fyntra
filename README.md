@@ -13,9 +13,9 @@ Fora do MVP (fase 2): motor de quote/ilustração (Compulife para Term/Final Exp
 ## Stack
 
 - Next.js (App Router) + TypeScript
-- Prisma + PostgreSQL (self-hosted via Coolify — `sigma-db`)
-- Auth: a definir (self-hosted, compatível com Coolify)
-- Deploy: Coolify (`sigma-apps`)
+- Prisma + PostgreSQL (self-hosted via Coolify — host `btdb`, banco `lifeos`)
+- Auth: Better Auth (self-hosted)
+- Deploy: Coolify (host `btapps`)
 
 ## Status
 
