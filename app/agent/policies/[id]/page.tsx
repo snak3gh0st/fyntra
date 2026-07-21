@@ -1,0 +1,116 @@
+export const dynamic = 'force-dynamic'
+
+import { notFound } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import { getCurrentAgent } from '@/lib/agent-context'
+import { getDownlineIds } from '@/lib/hierarchy'
+import { canAccessPolicy } from '@/lib/policy-access'
+import { uploadPolicyDocument } from './actions'
+import { Shell } from '@/components/Shell'
+import { PolicyStatusPill } from '@/components/StatusPill'
+import { Table, Thead, Th, Tr, Td, TdNum, EmptyState } from '@/components/Table'
+import { Button } from '@/components/Button'
+
+export default async function PolicyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const agent = await getCurrentAgent()
+  const user = await prisma.user.findUnique({ where: { id: agent.userId } })
+  const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
+  const scopeIds = [agent.id, ...getDownlineIds(allAgents, agent.id)]
+
+  const policy = await prisma.policy.findUnique({
+    where: { id },
+    include: {
+      client: true,
+      commissionRecords: { include: { agent: { include: { user: true } } }, orderBy: { createdAt: 'desc' } },
+      documents: true,
+    },
+  })
+  if (!policy || !canAccessPolicy({ role: 'AGENT', agentScopeIds: scopeIds }, policy)) notFound()
+
+  return (
+    <Shell role="AGENT" userName={user?.name ?? ''}>
+      <a href="/agent/policies" className="text-sm font-semibold text-teal hover:text-teal-deep">
+        ← Voltar
+      </a>
+      <h1 className="mt-2 text-[1.5rem] font-semibold tracking-tight text-ink">
+        Apólice {policy.policyNumber}
+      </h1>
+      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Carrier</p>
+          <p className="text-sm text-ink">{policy.carrier}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Produto</p>
+          <p className="text-sm text-ink">{policy.product}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Prêmio</p>
+          <p className="font-mono text-sm text-ink">${policy.premium.toString()}</p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Status</p>
+          <PolicyStatusPill status={policy.status} />
+        </div>
+      </div>
+
+      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Cliente</h2>
+      <p className="text-sm text-ink">
+        {policy.client.name} {policy.client.email ? `· ${policy.client.email}` : ''}
+      </p>
+
+      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Comissão gerada por esta apólice</h2>
+      <Table>
+        <Thead>
+          <tr>
+            <Th>Agente</Th>
+            <Th>Tipo</Th>
+            <Th>Nível</Th>
+            <Th>Período</Th>
+            <Th className="text-right">Valor</Th>
+          </tr>
+        </Thead>
+        <tbody>
+          {policy.commissionRecords.map((record) => (
+            <Tr key={record.id}>
+              <Td>{record.agent.user.name}</Td>
+              <Td>{record.type === 'DIRECT' ? 'Direta' : 'Override'}</Td>
+              <Td className="text-ink-muted">{record.level}</Td>
+              <Td className="font-mono">{record.period}</Td>
+              <TdNum>${record.amount.toString()}</TdNum>
+            </Tr>
+          ))}
+        </tbody>
+      </Table>
+      {policy.commissionRecords.length === 0 && <EmptyState>Nenhuma comissão registrada ainda.</EmptyState>}
+
+      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Documentos</h2>
+      <ul className="divide-y divide-border-steel rounded-lg border border-border-steel bg-panel">
+        {policy.documents.map((doc) => (
+          <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+            <a href={`/api/documents/${doc.id}`} target="_blank" className="text-teal hover:text-teal-deep">
+              {doc.filename}
+            </a>
+            <span className="text-ink-muted">{(doc.sizeBytes / 1024).toFixed(0)} KB</span>
+          </li>
+        ))}
+      </ul>
+      {policy.documents.length === 0 && <EmptyState>Nenhum documento ainda.</EmptyState>}
+
+      <form action={uploadPolicyDocument} className="mt-4 flex items-center gap-3">
+        <input type="hidden" name="policyId" value={policy.id} />
+        <input
+          type="file"
+          name="file"
+          accept=".pdf,.png,.jpg,.jpeg"
+          required
+          className="text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-teal-pale file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal"
+        />
+        <Button type="submit" variant="secondary">
+          Enviar documento
+        </Button>
+      </form>
+    </Shell>
+  )
+}
