@@ -14,6 +14,10 @@ export function shouldUpdateStatusChangedAt(
   return existing === null || existing.status !== newStatus
 }
 
+export function statusChangedAtForCreate(status: string): Date | null {
+  return status === 'LAPSED' || status === 'CANCELLED' ? null : new Date()
+}
+
 type ImportResult = {
   batchId: string
   successCount: number
@@ -71,7 +75,7 @@ export async function importPolicies(content: string, uploadedById: string, file
         status: row.status,
         effectiveDate: row.effectiveDate ? new Date(row.effectiveDate) : null,
         lastPaymentDate: row.lastPaymentDate ? new Date(row.lastPaymentDate) : null,
-        statusChangedAt: new Date(),
+        statusChangedAt: statusChangedAtForCreate(row.status),
         importBatchId: batch.id,
       },
       update: {

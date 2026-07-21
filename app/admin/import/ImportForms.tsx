@@ -34,10 +34,12 @@ function ImportCard({
   title,
   action,
   buttonLabel,
+  hint,
 }: {
   title: string
   action: (formData: FormData) => Promise<Result>
   buttonLabel: string
+  hint?: string
 }) {
   const [result, setResult] = useState<Result | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -45,6 +47,7 @@ function ImportCard({
   return (
     <section className="rounded-lg border border-border-steel bg-panel p-5">
       <h2 className="text-lg font-semibold text-ink">{title}</h2>
+      {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
       <form
         action={async (formData: FormData) => {
           setSubmitting(true)
@@ -75,7 +78,12 @@ function ImportCard({
 export function ImportForms() {
   return (
     <div className="mt-6 flex flex-col gap-6">
-      <ImportCard title="Apólices (CSV)" action={submitPolicyImport} buttonLabel="Importar apólices" />
+      <ImportCard
+        title="Apólices (CSV)"
+        action={submitPolicyImport}
+        buttonLabel="Importar apólices"
+        hint="Coluna opcional lastPaymentDate (data do último pagamento): sem ela, apólices em vigor sem data de vigência aparecem como &quot;sem sinal de pagamento&quot; nos alertas de risco do agente."
+      />
       <ImportCard title="Comissões (CSV)" action={submitCommissionImport} buttonLabel="Importar comissões" />
     </div>
   )

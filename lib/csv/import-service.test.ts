@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseCsv, shouldUpdateStatusChangedAt } from './import-service'
+import { parseCsv, shouldUpdateStatusChangedAt, statusChangedAtForCreate } from './import-service'
 
 describe('parseCsv', () => {
   it('parses a header row into keyed objects', () => {
@@ -26,5 +26,23 @@ describe('shouldUpdateStatusChangedAt', () => {
 
   it('returns false when the status is unchanged', () => {
     expect(shouldUpdateStatusChangedAt({ status: 'INFORCE' }, 'INFORCE')).toBe(false)
+  })
+})
+
+describe('statusChangedAtForCreate', () => {
+  it('returns null when the incoming status is already LAPSED', () => {
+    expect(statusChangedAtForCreate('LAPSED')).toBeNull()
+  })
+
+  it('returns null when the incoming status is already CANCELLED', () => {
+    expect(statusChangedAtForCreate('CANCELLED')).toBeNull()
+  })
+
+  it('returns a Date for a non-terminal status like PENDING', () => {
+    expect(statusChangedAtForCreate('PENDING')).toBeInstanceOf(Date)
+  })
+
+  it('returns a Date for a non-terminal status like INFORCE', () => {
+    expect(statusChangedAtForCreate('INFORCE')).toBeInstanceOf(Date)
   })
 })
