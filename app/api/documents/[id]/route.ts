@@ -27,10 +27,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (role === 'ADMIN') {
     allowed = true
   } else if (role === 'AGENT') {
-    const agent = await getCurrentAgent()
-    const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
-    const scopeIds = [agent.id, ...getDownlineIds(allAgents, agent.id)]
-    allowed = canAccessPolicy({ role: 'AGENT', agentScopeIds: scopeIds }, document.policy)
+    try {
+      const agent = await getCurrentAgent()
+      const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
+      const scopeIds = [agent.id, ...getDownlineIds(allAgents, agent.id)]
+      allowed = canAccessPolicy({ role: 'AGENT', agentScopeIds: scopeIds }, document.policy)
+    } catch {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
   } else {
     const client = await prisma.client.findUnique({ where: { userId: session.user.id } })
     if (client) {
