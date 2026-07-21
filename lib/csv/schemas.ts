@@ -1,9 +1,15 @@
 import { z } from 'zod'
 
 const numericString = z.string().transform((val, ctx) => {
+  // Reject empty or whitespace-only strings
+  if (val.trim() === '') {
+    ctx.addIssue({ code: 'custom', message: 'amount cannot be empty' })
+    return z.NEVER
+  }
   const parsed = Number(val)
-  if (Number.isNaN(parsed)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `"${val}" is not a number` })
+  // Use isFinite to reject NaN, Infinity, and -Infinity
+  if (!Number.isFinite(parsed)) {
+    ctx.addIssue({ code: 'custom', message: `"${val}" is not a valid number` })
     return z.NEVER
   }
   return parsed

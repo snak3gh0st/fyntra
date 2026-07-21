@@ -56,4 +56,24 @@ describe('CommissionRowSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('rejects an empty string amount', () => {
+    const result = CommissionRowSchema.safeParse({
+      policyNumber: 'NLG-0002',
+      agentNpn: '1000003',
+      amount: '',
+      period: '2026-01',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects Infinity as amount', () => {
+    const result = CommissionRowSchema.safeParse({
+      policyNumber: 'NLG-0002',
+      agentNpn: '1000003',
+      amount: 'Infinity',
+      period: '2026-01',
+    })
+    expect(result.success).toBe(false)
+  })
 })
