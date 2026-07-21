@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 type NavItem = { href: string; label: string };
 
@@ -32,7 +33,14 @@ export function Shell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const items = NAV[role];
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <div className="flex min-h-full w-full flex-col md:flex-row">
@@ -60,9 +68,18 @@ export function Shell({
               </li>
             );
           })}
+          <li className="shrink-0 md:mt-auto md:shrink">
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="block w-full whitespace-nowrap px-4 py-3 text-left text-sm font-semibold text-ink-muted hover:text-ink md:rounded-md md:px-3 md:py-2"
+            >
+              Sair
+            </button>
+          </li>
         </ul>
-        <div className="hidden border-t border-border-steel px-5 py-4 text-xs text-ink-muted md:block">
-          {userName}
+        <div className="hidden border-t border-border-steel px-5 py-4 md:block">
+          <p className="text-xs text-ink-muted">{userName}</p>
         </div>
       </nav>
       <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
