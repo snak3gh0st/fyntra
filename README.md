@@ -1,4 +1,6 @@
-# lifeOS
+# Fyntra
+
+**Fyntra** — Finance, Intelligence and Traction.
 
 Sistema interno da RICOS para agentes de seguro de vida (National Life Group / Five Rings Financial / Alliance Group).
 
@@ -13,7 +15,7 @@ Fora do MVP (fase 2): motor de quote/ilustração (Compulife para Term/Final Exp
 ## Stack
 
 - Next.js (App Router) + TypeScript
-- Prisma + PostgreSQL (self-hosted via Coolify — host `btdb`, banco `lifeos`)
+- Prisma + PostgreSQL (self-hosted via Coolify — host `btdb`, banco `lifeos` — nome de infra herdado, o produto chama-se Fyntra)
 - Auth: Better Auth (self-hosted)
 - Deploy: Coolify (host `btapps`)
 
