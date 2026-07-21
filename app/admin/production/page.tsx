@@ -63,14 +63,20 @@ export default async function ProductionPage({
     <Shell role="ADMIN" userName={session.user.name}>
       <h1 className="text-[1.5rem] font-semibold tracking-tight text-ink">Produção por agente</h1>
 
-      <form method="GET" className="mt-4">
-        <Select name="period" defaultValue={period} onChange={(e) => e.currentTarget.form?.requestSubmit()}>
+      <form method="GET" className="mt-4 flex items-center gap-2">
+        <Select name="period" defaultValue={period}>
           {periods.map((p) => (
             <option key={p} value={p}>
               {p}
             </option>
           ))}
         </Select>
+        <button
+          type="submit"
+          className="rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:border-teal"
+        >
+          Aplicar
+        </button>
       </form>
 
       <div className="mt-6">
