@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { bucketByMonth } from '@/lib/dashboard'
+import { getRiskAlerts, type RiskAlert } from '@/lib/alerts'
 import { Shell } from '@/components/Shell'
 
 function StatCard({ label, value }: { label: string; value: React.ReactNode }) {
@@ -71,6 +72,58 @@ function MonthlyChart({ buckets }: { buckets: { month: string; count: number }[]
   )
 }
 
+const ALERT_GROUP_LABELS: Record<RiskAlert['type'], string> = {
+  STALLED: 'Paradas no funil (mais de 15 dias)',
+  NO_PAYMENT: 'Sem sinal de pagamento (mais de 30 dias)',
+  RECENT_LAPSE: 'Lapsaram recentemente',
+}
+
+const ALERT_GROUP_TONE: Record<RiskAlert['type'], string> = {
+  STALLED: 'bg-gold-pale text-gold',
+  NO_PAYMENT: 'bg-danger-pale text-danger',
+  RECENT_LAPSE: 'bg-danger-pale text-danger',
+}
+
+function RiskAlertsSection({ alerts }: { alerts: RiskAlert[] }) {
+  if (alerts.length === 0) return null
+
+  const groups = (['STALLED', 'NO_PAYMENT', 'RECENT_LAPSE'] as const)
+    .map((type) => ({ type, items: alerts.filter((a) => a.type === type) }))
+    .filter((g) => g.items.length > 0)
+
+  return (
+    <div className="mt-6 rounded-lg border border-border-steel bg-panel px-5 py-4">
+      <h2 className="text-sm font-semibold text-ink">Alertas</h2>
+      <div className="mt-3 flex flex-col gap-4">
+        {groups.map((group) => (
+          <div key={group.type}>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide ${ALERT_GROUP_TONE[group.type]}`}
+            >
+              {ALERT_GROUP_LABELS[group.type]}
+            </span>
+            <ul className="mt-2 flex flex-col gap-1">
+              {group.items.map((alert) => (
+                <li key={alert.policy.id} className="flex items-center justify-between text-sm">
+                  <a
+                    href={`/agent/policies/${alert.policy.id}`}
+                    className="text-teal hover:text-teal-deep"
+                  >
+                    {alert.policy.policyNumber} — {alert.policy.clientName} ({alert.policy.carrier}, {alert.policy.product})
+                  </a>
+                  <span className="font-mono tabular-nums text-ink-muted">
+                    {Number.isFinite(alert.daysSince) ? `há ${alert.daysSince} dias` : 'sem data de referência'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const STATUS_LABELS: Record<string, string> = {
   INFORCE: 'Em vigor',
   APPROVED: 'Aprovada',
@@ -85,14 +138,45 @@ export default async function AgentDashboard() {
   const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
   const downlineIds = getDownlineIds(allAgents, agent.id)
 
-  const [policyCount, commissionTotal, byStatus, byCarrier, byProduct, policies] = await Promise.all([
+  const [policyCount, commissionTotal, byStatus, byCarrier, byProduct, policies, alertPolicies] = await Promise.all([
     prisma.policy.count({ where: { agentId: agent.id } }),
     prisma.commissionRecord.aggregate({ where: { agentId: agent.id }, _sum: { amount: true } }),
     prisma.policy.groupBy({ by: ['status'], where: { agentId: agent.id }, _count: true }),
     prisma.policy.groupBy({ by: ['carrier'], where: { agentId: agent.id }, _count: true }),
     prisma.policy.groupBy({ by: ['product'], where: { agentId: agent.id }, _count: true }),
     prisma.policy.findMany({ where: { agentId: agent.id }, select: { createdAt: true } }),
+    prisma.policy.findMany({
+      where: { agentId: agent.id },
+      select: {
+        id: true,
+        policyNumber: true,
+        carrier: true,
+        product: true,
+        status: true,
+        createdAt: true,
+        effectiveDate: true,
+        lastPaymentDate: true,
+        statusChangedAt: true,
+        client: { select: { name: true } },
+      },
+    }),
   ])
+
+  const riskAlerts = getRiskAlerts(
+    alertPolicies.map((p) => ({
+      id: p.id,
+      policyNumber: p.policyNumber,
+      carrier: p.carrier,
+      product: p.product,
+      clientName: p.client.name,
+      status: p.status,
+      createdAt: p.createdAt,
+      effectiveDate: p.effectiveDate,
+      lastPaymentDate: p.lastPaymentDate,
+      statusChangedAt: p.statusChangedAt,
+    })),
+    new Date(),
+  )
 
   const monthlyBuckets = bucketByMonth(policies.map((p) => p.createdAt), 6, new Date())
 
@@ -107,6 +191,8 @@ export default async function AgentDashboard() {
         />
         <StatCard label="Tamanho da minha downline" value={downlineIds.length} />
       </div>
+
+      <RiskAlertsSection alerts={riskAlerts} />
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <BreakdownList
