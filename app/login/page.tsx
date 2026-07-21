@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
+import { Button } from '@/components/Button'
+import { Field, Input } from '@/components/Field'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -30,23 +32,29 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ maxWidth: 360, margin: '4rem auto' }}>
-      <h1>Entrar</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <label>
-          Email
-          <input
+    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-4">
+      <div className="mb-8">
+        <span className="font-sans text-2xl font-semibold tracking-tight text-ink">
+          Fyntra
+        </span>
+        <p className="mt-1 text-sm text-ink-muted">
+          Entre com sua conta da RICOS.
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Field label="Email">
+          <Input
             type="email"
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
+            placeholder="voce@ricos.test"
           />
-        </label>
-        <label>
-          Senha
-          <input
+        </Field>
+        <Field label="Senha">
+          <Input
             type="password"
             name="password"
             value={password}
@@ -54,11 +62,15 @@ export default function LoginPage() {
             required
             autoComplete="current-password"
           />
-        </label>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button type="submit" disabled={submitting}>
+        </Field>
+        {error && (
+          <p className="rounded-md bg-danger-pale px-3 py-2 text-sm text-danger">
+            {error}
+          </p>
+        )}
+        <Button type="submit" variant="primary" disabled={submitting}>
           {submitting ? 'Entrando…' : 'Entrar'}
-        </button>
+        </Button>
       </form>
     </main>
   )

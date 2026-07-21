@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-21T00:00:00.000Z",
+  "title": "Design System: Fyntra",
+  "extensions": {
+    "colorMeta": {
+      "ledger-teal": {
+        "role": "primary",
+        "displayName": "Ledger Teal",
+        "canonical": "oklch(0.42 0.09 200)",
+        "tonalRamp": [
+          "oklch(0.15 0.05 200)",
+          "oklch(0.24 0.07 200)",
+          "oklch(0.32 0.08 200)",
+          "oklch(0.42 0.09 200)",
+          "oklch(0.55 0.08 200)",
+          "oklch(0.68 0.06 200)",
+          "oklch(0.82 0.04 200)",
+          "oklch(0.93 0.02 200)"
+        ]
+      },
+      "ledger-gold": {
+        "role": "secondary",
+        "displayName": "Ledger Gold",
+        "canonical": "oklch(0.62 0.15 70)",
+        "tonalRamp": [
+          "oklch(0.20 0.08 70)",
+          "oklch(0.32 0.11 70)",
+          "oklch(0.45 0.14 70)",
+          "oklch(0.62 0.15 70)",
+          "oklch(0.72 0.13 70)",
+          "oklch(0.82 0.09 70)",
+          "oklch(0.90 0.06 70)",
+          "oklch(0.96 0.03 70)"
+        ]
+      },
+      "paper-steel": {
+        "role": "neutral",
+        "displayName": "Paper Steel",
+        "canonical": "oklch(0.99 0.004 200)",
+        "tonalRamp": [
+          "oklch(0.18 0.012 200)",
+          "oklch(0.30 0.012 200)",
+          "oklch(0.48 0.01 200)",
+          "oklch(0.65 0.009 200)",
+          "oklch(0.80 0.007 200)",
+          "oklch(0.88 0.008 200)",
+          "oklch(0.965 0.006 200)",
+          "oklch(0.99 0.004 200)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Ledger Success",
+        "canonical": "oklch(0.46 0.11 155)",
+        "tonalRamp": [
+          "oklch(0.20 0.06 155)",
+          "oklch(0.30 0.08 155)",
+          "oklch(0.38 0.10 155)",
+          "oklch(0.46 0.11 155)",
+          "oklch(0.60 0.10 155)",
+          "oklch(0.75 0.07 155)",
+          "oklch(0.87 0.05 155)",
+          "oklch(0.94 0.03 155)"
+        ]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Ledger Danger",
+        "canonical": "oklch(0.52 0.17 25)",
+        "tonalRamp": [
+          "oklch(0.22 0.09 25)",
+          "oklch(0.32 0.12 25)",
+          "oklch(0.42 0.15 25)",
+          "oklch(0.52 0.17 25)",
+          "oklch(0.63 0.15 25)",
+          "oklch(0.76 0.11 25)",
+          "oklch(0.87 0.07 25)",
+          "oklch(0.94 0.04 25)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Título de página. Nunca maior que 1.875rem — é produto, não landing page." },
+      "title": { "displayName": "Title", "purpose": "Cabeçalho de seção, card ou coluna em destaque." },
+      "body": { "displayName": "Body", "purpose": "Texto corrido, células de tabela não-numéricas, labels de formulário." },
+      "label": { "displayName": "Label", "purpose": "Cabeçalho de coluna, texto dentro de pill de status. Único lugar onde uppercase é permitido." },
+      "numeric": { "displayName": "Numeric", "purpose": "Todo valor monetário, percentual, número de apólice ou NPN — sempre mono, sempre tabular-nums." }
+    },
+    "shadows": [
+      { "name": "overlay", "value": "0 8px 24px oklch(0.18 0.012 200 / 0.12)", "purpose": "Único uso de sombra do sistema: dropdown, modal, toast." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Ease-out-quint padrão para hover/focus/transições de estado." },
+      { "name": "duration-fast", "value": "120ms", "purpose": "Hover de botão, borda de input." },
+      { "name": "duration-standard", "value": "200ms", "purpose": "Abertura de dropdown/modal, troca de página." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "0px" },
+      { "name": "tablet", "value": "640px" },
+      { "name": "desktop", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal da tela — no máximo um por tela (The One Action Rule).",
+      "html": "<button class=\"ds-btn-primary\">Salvar plano</button>",
+      "css": ".ds-btn-primary { background: oklch(0.42 0.09 200); color: oklch(0.99 0.004 200); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; transition: background 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-primary:hover { background: oklch(0.32 0.08 200); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.93 0.02 200); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ação secundária, contorno neutro.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { background: oklch(0.99 0.004 200); color: oklch(0.18 0.012 200); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.9375rem; padding: 10px 18px; border: 1px solid oklch(0.88 0.008 200); border-radius: 6px; cursor: pointer; transition: border-color 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-secondary:hover { border-color: oklch(0.42 0.09 200); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(0.93 0.02 200); }"
+    },
+    {
+      "name": "Status Pill — Success",
+      "kind": "chip",
+      "refersTo": "status-pill-success",
+      "description": "Apólice em vigor, import concluído sem erro. Sempre com texto do status visível.",
+      "html": "<span class=\"ds-pill-success\">Em vigor</span>",
+      "css": ".ds-pill-success { display: inline-flex; align-items: center; background: oklch(0.94 0.03 155); color: oklch(0.46 0.11 155); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.03em; padding: 3px 10px; border-radius: 999px; }"
+    },
+    {
+      "name": "Status Pill — Warning",
+      "kind": "chip",
+      "refersTo": "status-pill-warning",
+      "description": "Pendente, aguardando ação.",
+      "html": "<span class=\"ds-pill-warning\">Pendente</span>",
+      "css": ".ds-pill-warning { display: inline-flex; align-items: center; background: oklch(0.93 0.04 70); color: oklch(0.62 0.15 70); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.03em; padding: 3px 10px; border-radius: 999px; }"
+    },
+    {
+      "name": "Status Pill — Danger",
+      "kind": "chip",
+      "refersTo": "status-pill-danger",
+      "description": "Cancelada, lapsada, erro de linha de import.",
+      "html": "<span class=\"ds-pill-danger\">Cancelada</span>",
+      "css": ".ds-pill-danger { display: inline-flex; align-items: center; background: oklch(0.94 0.04 25); color: oklch(0.52 0.17 25); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.03em; padding: 3px 10px; border-radius: 999px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de formulário padrão, com estado de foco e erro.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Email</span><input class=\"ds-input\" type=\"email\" placeholder=\"voce@ricos.test\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Sans', system-ui, sans-serif; } .ds-field-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; color: oklch(0.48 0.01 200); } .ds-input { background: oklch(0.99 0.004 200); color: oklch(0.18 0.012 200); border: 1px solid oklch(0.88 0.008 200); border-radius: 6px; padding: 9px 12px; font-size: 0.9375rem; transition: border-color 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-input:focus { outline: none; border-color: oklch(0.42 0.09 200); box-shadow: 0 0 0 3px oklch(0.93 0.02 200); }"
+    },
+    {
+      "name": "Data Table Row",
+      "kind": "custom",
+      "refersTo": "table-row",
+      "description": "Linha de tabela com coluna numérica alinhada à direita em mono — o componente de assinatura do produto.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Apólice</th><th>Cliente</th><th class=\"ds-num\">Prêmio</th></tr></thead><tbody><tr><td>NLG-0001</td><td>Cliente Exemplo</td><td class=\"ds-num\">$45.50</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Sans', system-ui, sans-serif; } .ds-table th { background: oklch(0.965 0.006 200); color: oklch(0.48 0.01 200); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; text-align: left; padding: 10px 12px; border-bottom: 1px solid oklch(0.88 0.008 200); } .ds-table td { padding: 10px 12px; border-bottom: 1px solid oklch(0.88 0.008 200); color: oklch(0.18 0.012 200); font-size: 0.9375rem; } .ds-table tr:hover td { background: oklch(0.93 0.02 200); } .ds-num { text-align: right; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ledger Room",
+    "overview": "Fyntra é a sala dos livros-razão de uma corretora séria: aço-teal fosco, números alinhados, luz branca e fria. Não é um CRM de marketing tentando parecer divertido — é a ferramenta que um admin abre pra conferir se a comissão bateu certo, e que um agente abre no celular entre uma reunião e outra pra saber quanto vai receber. A confiança vem da clareza dos números e da hierarquia visual, nunca de efeito decorativo. Rejeita explicitamente o padrão CRM white-label (GoHighLevel/SparkLeads): dashboard escuro raso, cards idênticos, azul/roxo de SaaS genérico, ícones fofos.",
+    "keyCharacteristics": [
+      "Fundo quase-branco com leve frieza (não branco puro genérico de SaaS, não creme quente de landing page de IA)",
+      "Um teal-aço escuro como cor de ação primária — raro, nunca decorativo",
+      "Números sempre em fonte monoespaçada, alinhados à direita nas tabelas",
+      "Zero sombra pesada, zero glassmorphism, zero gradiente",
+      "Status (apólice, import) sempre com texto/pill, nunca só cor"
+    ],
+    "rules": [
+      { "name": "The One Action Rule", "body": "Ledger Teal aparece no máximo uma vez como botão preenchido por tela — todo o resto é botão secundário (contorno) ou link.", "section": "colors" },
+      { "name": "The No Color-Only Status Rule", "body": "Nenhum status é comunicado só por cor de fundo — sempre acompanhado do texto do status por extenso dentro do pill.", "section": "colors" },
+      { "name": "The Mono Money Rule", "body": "Todo número que representa dinheiro, percentual ou identificador usa IBM Plex Mono. Texto descritivo nunca usa mono.", "section": "typography" },
+      { "name": "The Flat-At-Rest Rule", "body": "Nenhum card, tabela ou botão em estado de repouso tem box-shadow. Sombra é exclusiva de elementos sobrepostos.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar Ledger Teal em no máximo um botão preenchido por tela (The One Action Rule).",
+      "Do exibir todo status com texto por extenso dentro do pill, nunca só cor de fundo.",
+      "Do usar IBM Plex Mono para todo valor monetário, percentual e identificador numérico, alinhado à direita em tabela.",
+      "Do manter o sistema plano em repouso — camadas tonais fazem o trabalho de profundidade que sombra faria.",
+      "Do testar todo layout em largura de celular real — agentes usam isso em campo, não só no escritório."
+    ],
+    "donts": [
+      "Don't usar dashboard escuro raso, cards idênticos ou azul/roxo genérico de SaaS.",
+      "Don't usar box-shadow com blur >= 16px em card ou botão em repouso.",
+      "Don't usar gradiente em texto, glassmorphism decorativo ou border-left/border-right colorido como acento de card.",
+      "Don't arredondar cards, seções ou inputs acima de 12px.",
+      "Don't comunicar aprovado/pendente/cancelado só pela cor do pill."
+    ]
+  }
+}

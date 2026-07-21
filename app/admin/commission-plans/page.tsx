@@ -1,42 +1,57 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { createCommissionPlan } from './actions'
+import { Shell } from '@/components/Shell'
+import { Table, Thead, Th, Tr, Td, TdNum, EmptyState } from '@/components/Table'
+import { Field, Input } from '@/components/Field'
+import { Button } from '@/components/Button'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CommissionPlansPage() {
-  await requireRole('ADMIN')
+  const session = await requireRole('ADMIN')
   const plans = await prisma.commissionPlan.findMany({ orderBy: [{ rank: 'asc' }, { downlineLevel: 'asc' }] })
 
   return (
-    <main>
-      <h1>Planos de comissão</h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Nível de downline</th>
-            <th>% de override</th>
-          </tr>
-        </thead>
-        <tbody>
-          {plans.map((plan) => (
-            <tr key={plan.id}>
-              <td>{plan.rank}</td>
-              <td>{plan.downlineLevel}</td>
-              <td>{plan.overridePercent.toString()}%</td>
+    <Shell role="ADMIN" userName={session.user.name}>
+      <h1 className="text-[1.5rem] font-semibold tracking-tight text-ink">Planos de comissão</h1>
+      <div className="mt-6">
+        <Table>
+          <Thead>
+            <tr>
+              <Th>Rank</Th>
+              <Th>Nível de downline</Th>
+              <Th className="text-right">% de override</Th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </Thead>
+          <tbody>
+            {plans.map((plan) => (
+              <Tr key={plan.id}>
+                <Td className="font-medium">{plan.rank}</Td>
+                <Td className="text-ink-muted">{plan.downlineLevel}</Td>
+                <TdNum>{plan.overridePercent.toString()}%</TdNum>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
+        {plans.length === 0 && <EmptyState>Nenhum plano cadastrado ainda.</EmptyState>}
+      </div>
 
-      <h2>Novo plano</h2>
-      <form action={createCommissionPlan}>
-        <input name="rank" placeholder="Rank (ex: MANAGER)" required />
-        <input name="downlineLevel" type="number" min={1} placeholder="Nível" required />
-        <input name="overridePercent" type="number" step="0.01" placeholder="% override" required />
-        <button type="submit">Salvar</button>
+      <h2 className="mt-8 mb-3 text-lg font-semibold text-ink">Novo plano</h2>
+      <form action={createCommissionPlan} className="flex flex-wrap items-end gap-3">
+        <Field label="Rank">
+          <Input name="rank" placeholder="ex: MANAGER" required className="w-40" />
+        </Field>
+        <Field label="Nível">
+          <Input name="downlineLevel" type="number" min={1} placeholder="1" required className="w-24" />
+        </Field>
+        <Field label="% override">
+          <Input name="overridePercent" type="number" step="0.01" placeholder="10.00" required className="w-28" />
+        </Field>
+        <Button type="submit" variant="primary">
+          Salvar
+        </Button>
       </form>
-    </main>
+    </Shell>
   )
 }
