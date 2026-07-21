@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+// Known limitation (deferred): this parses CSV numeric fields (premium,
+// faceAmount, commission amount) into plain JS `number` rather than a
+// Decimal type. That's an acceptable float-precision risk here because
+// each value only goes through a single Number(string) parse — no chained
+// arithmetic — and is bounded by realistic premium/face-amount ranges. The
+// one place override commission math actually chains multiplication/division
+// on money (lib/commission.ts' computeOverrides) was fixed to use
+// decimal.js instead; rewriting this whole CSV pipeline plus every downstream
+// Prisma Decimal touchpoint to be fully Decimal-based end-to-end was judged
+// out of scope for this fix pass.
 const numericString = z.string().transform((val, ctx) => {
   // Reject empty or whitespace-only strings
   if (val.trim() === '') {
