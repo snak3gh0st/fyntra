@@ -36,7 +36,11 @@ export default async function PoliciesPage() {
           <tbody>
             {policies.map((policy) => (
               <Tr key={policy.id}>
-                <Td className="font-mono">{policy.policyNumber}</Td>
+                <Td className="font-mono">
+                  <a href={`/agent/policies/${policy.id}`} className="text-teal hover:text-teal-deep">
+                    {policy.policyNumber}
+                  </a>
+                </Td>
                 <Td>{policy.client.name}</Td>
                 <Td className="text-ink-muted">{policy.carrier}</Td>
                 <Td className="text-ink-muted">{policy.product}</Td>

@@ -31,7 +31,11 @@ export default async function ClientPortalPage() {
           <tbody>
             {policies.map((policy) => (
               <Tr key={policy.id}>
-                <Td className="font-mono">{policy.policyNumber}</Td>
+                <Td className="font-mono">
+                  <a href={`/client/policies/${policy.id}`} className="text-teal hover:text-teal-deep">
+                    {policy.policyNumber}
+                  </a>
+                </Td>
                 <Td className="text-ink-muted">{policy.carrier}</Td>
                 <Td className="text-ink-muted">{policy.product}</Td>
                 <TdNum>${policy.premium.toString()}</TdNum>
