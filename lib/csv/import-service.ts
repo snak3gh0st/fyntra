@@ -13,10 +13,10 @@ type ImportResult = {
   errors: { row: number; message: string }[]
 }
 
-export async function importPolicies(content: string, uploadedById: string): Promise<ImportResult> {
+export async function importPolicies(content: string, uploadedById: string, filename: string): Promise<ImportResult> {
   const rows = parseCsv(content)
   const batch = await prisma.importBatch.create({
-    data: { uploadedById, filename: 'policies.csv', type: 'POLICIES', status: 'PROCESSING' },
+    data: { uploadedById, filename, type: 'POLICIES', status: 'PROCESSING' },
   })
 
   const errors: { row: number; message: string }[] = []
@@ -81,10 +81,10 @@ export async function importPolicies(content: string, uploadedById: string): Pro
   return { batchId: batch.id, successCount, errors }
 }
 
-export async function importCommissions(content: string, uploadedById: string): Promise<ImportResult> {
+export async function importCommissions(content: string, uploadedById: string, filename: string): Promise<ImportResult> {
   const rows = parseCsv(content)
   const batch = await prisma.importBatch.create({
-    data: { uploadedById, filename: 'commissions.csv', type: 'COMMISSIONS', status: 'PROCESSING' },
+    data: { uploadedById, filename, type: 'COMMISSIONS', status: 'PROCESSING' },
   })
 
   const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true, rank: true } })

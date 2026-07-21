@@ -9,7 +9,7 @@ export async function submitPolicyImport(formData: FormData) {
   if (!session) throw new Error('Not authenticated')
   const file = formData.get('file') as File
   const content = await file.text()
-  return importPolicies(content, session.user.id)
+  return importPolicies(content, session.user.id, file.name)
 }
 
 export async function submitCommissionImport(formData: FormData) {
@@ -17,5 +17,5 @@ export async function submitCommissionImport(formData: FormData) {
   if (!session) throw new Error('Not authenticated')
   const file = formData.get('file') as File
   const content = await file.text()
-  return importCommissions(content, session.user.id)
+  return importCommissions(content, session.user.id, file.name)
 }
