@@ -117,6 +117,8 @@ model Policy {
   premium       Decimal
   status        PolicyStatus
   effectiveDate DateTime?
+  lastPaymentDate DateTime?
+  statusChangedAt DateTime?
   importBatchId String?
   importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id])
   createdAt     DateTime     @default(now())
