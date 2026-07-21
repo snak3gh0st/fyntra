@@ -36,6 +36,7 @@ export const PolicyRowSchema = z.object({
   premium: numericString,
   status: z.enum(['PENDING', 'APPROVED', 'INFORCE', 'LAPSED', 'CANCELLED']),
   effectiveDate: z.string().optional(),
+  lastPaymentDate: z.string().optional(),
 })
 
 export type PolicyRow = z.infer<typeof PolicyRowSchema>

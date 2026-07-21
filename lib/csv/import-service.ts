@@ -7,6 +7,13 @@ export function parseCsv(content: string): Record<string, string>[] {
   return parse(content, { columns: true, skip_empty_lines: true, trim: true })
 }
 
+export function shouldUpdateStatusChangedAt(
+  existing: { status: string } | null,
+  newStatus: string,
+): boolean {
+  return existing === null || existing.status !== newStatus
+}
+
 type ImportResult = {
   batchId: string
   successCount: number
@@ -44,6 +51,13 @@ export async function importPolicies(content: string, uploadedById: string, file
       },
       update: {},
     })
+    const existingPolicy = await prisma.policy.findUnique({
+      where: { policyNumber: row.policyNumber },
+      select: { status: true },
+    })
+    const statusChangedAt = shouldUpdateStatusChangedAt(existingPolicy, row.status)
+      ? new Date()
+      : undefined
     await prisma.policy.upsert({
       where: { policyNumber: row.policyNumber },
       create: {
@@ -56,6 +70,8 @@ export async function importPolicies(content: string, uploadedById: string, file
         premium: row.premium,
         status: row.status,
         effectiveDate: row.effectiveDate ? new Date(row.effectiveDate) : null,
+        lastPaymentDate: row.lastPaymentDate ? new Date(row.lastPaymentDate) : null,
+        statusChangedAt: new Date(),
         importBatchId: batch.id,
       },
       update: {
@@ -64,6 +80,8 @@ export async function importPolicies(content: string, uploadedById: string, file
         faceAmount: row.faceAmount,
         premium: row.premium,
         status: row.status,
+        lastPaymentDate: row.lastPaymentDate ? new Date(row.lastPaymentDate) : null,
+        ...(statusChangedAt ? { statusChangedAt } : {}),
         importBatchId: batch.id,
       },
     })

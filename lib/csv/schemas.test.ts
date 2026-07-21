@@ -34,6 +34,41 @@ describe('PolicyRowSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('accepts an optional lastPaymentDate', () => {
+    const result = PolicyRowSchema.safeParse({
+      clientName: 'Cliente Exemplo',
+      agentNpn: '1000003',
+      carrier: 'National Life Group',
+      product: 'Term 20',
+      policyNumber: 'NLG-0002',
+      faceAmount: '250000',
+      premium: '45.50',
+      status: 'INFORCE',
+      lastPaymentDate: '2026-06-01',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.lastPaymentDate).toBe('2026-06-01')
+    }
+  })
+
+  it('accepts a row with no lastPaymentDate at all', () => {
+    const result = PolicyRowSchema.safeParse({
+      clientName: 'Cliente Exemplo',
+      agentNpn: '1000003',
+      carrier: 'National Life Group',
+      product: 'Term 20',
+      policyNumber: 'NLG-0002',
+      faceAmount: '250000',
+      premium: '45.50',
+      status: 'INFORCE',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.lastPaymentDate).toBeUndefined()
+    }
+  })
 })
 
 describe('CommissionRowSchema', () => {
