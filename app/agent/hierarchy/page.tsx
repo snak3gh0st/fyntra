@@ -31,7 +31,7 @@ export default async function HierarchyPage() {
           <div className="mb-4 flex items-baseline justify-between gap-3">
             <span className="text-xs text-ink-muted">Agentes organizados pela profundidade da estrutura</span>
           </div>
-          <HierarchyList rows={downlineRows} />
+          <HierarchyList rows={downlineRows} paginate />
         </section>
         <ContextPanel eyebrow="Sua posição" title="Como ler a hierarquia">
           <p>Acima de você estão os responsáveis pela sua linha. Abaixo estão os agentes que fazem parte da sua downline.</p>

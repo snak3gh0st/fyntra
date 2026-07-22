@@ -1,13 +1,11 @@
-import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { decimalToNumber } from '@/lib/decimal'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
-import { EmptyState } from '@/components/Table'
-import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { ContextPanel } from '@/components/ContextPanel'
+import { CommissionsList } from './CommissionsList'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,45 +54,22 @@ export default async function CommissionsPage() {
       )}
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
       <div className="max-w-4xl">
-        {byPeriod.map(({ period, rows, subtotal }) => (
-          <div key={period} className="mb-6">
-            <div className="mb-2 flex items-baseline justify-between">
-              <h2 className="font-mono text-sm font-semibold text-ink-muted">{period}</h2>
-              <span className="font-mono text-xs text-ink-muted">
-                Subtotal <span className="font-semibold text-ink">${subtotal.toFixed(2)}</span>
-              </span>
-            </div>
-            <EntityCardList>
-              {rows.map((record, i) => (
-                <EntityCard key={record.id} index={i}>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink">
-                      {record.policy ? (
-                        <Link
-                          href={`/agent/policies/${record.policy.id}`}
-                          className="font-mono hover:text-teal"
-                        >
-                          {record.policy.policyNumber}
-                        </Link>
-                      ) : (
-                        '—'
-                      )}
-                    </p>
-                    <p className="truncate text-xs text-ink-muted">
-                      {record.policy?.agent.user.name ?? '—'} · {record.type === 'DIRECT' ? 'Direta' : 'Repasse'} ·
-                      Nível {record.level}
-                    </p>
-                  </div>
-                  <span className="shrink-0 font-mono font-medium tabular-nums text-ink">
-                    ${decimalToNumber(record.amount).toFixed(2)}
-                  </span>
-                </EntityCard>
-              ))}
-            </EntityCardList>
-          </div>
-        ))}
-        {records.length === 0 && !loadError && (
-          <EmptyState>Nenhuma comissão registrada ainda.</EmptyState>
+        {!loadError && (
+          <CommissionsList
+            byPeriod={byPeriod.map(({ period, rows, subtotal }) => ({
+              period,
+              subtotal: subtotal.toFixed(2),
+              rows: rows.map((record) => ({
+                id: record.id,
+                policyNumber: record.policy?.policyNumber ?? null,
+                policyId: record.policy?.id ?? null,
+                agentName: record.policy?.agent.user.name ?? '—',
+                typeLabel: record.type === 'DIRECT' ? 'Direta' : 'Repasse',
+                level: record.level,
+                amount: decimalToNumber(record.amount).toFixed(2),
+              })),
+            }))}
+          />
         )}
       </div>
       <ContextPanel eyebrow="Como ler" title="Seu extrato">

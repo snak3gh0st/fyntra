@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { EmptyState } from "@/components/Table";
 import { Avatar } from "@/components/Avatar";
+import { Pagination, clampPage } from "@/components/Pagination";
+
+const PAGE_SIZE = 12;
 
 type Row = { name: string; rank: string; level?: number };
 
@@ -29,18 +33,28 @@ function PersonCard({ row, index, reducedMotion }: { row: Row; index: number; re
   );
 }
 
-export function HierarchyList({ rows }: { rows: Row[] }) {
+export function HierarchyList({ rows, paginate = false }: { rows: Row[]; paginate?: boolean }) {
   const reducedMotion = useReducedMotion() ?? false;
+  const [page, setPage] = useState(1);
+
   if (rows.length === 0) {
     return <EmptyState>Ninguém aqui.</EmptyState>;
   }
+
+  const pageCount = paginate ? Math.max(1, Math.ceil(rows.length / PAGE_SIZE)) : 1;
+  const currentPage = clampPage(page, pageCount);
+  const pageRows = paginate ? rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE) : rows;
+
   return (
-    <div className="overflow-hidden rounded-md border border-border-steel bg-paper divide-y divide-border-steel">
-      {rows.map((row, i) => (
-        <div key={`${row.name}-${i}`}>
-          <PersonCard row={row} index={i} reducedMotion={reducedMotion} />
-        </div>
-      ))}
+    <div>
+      <div className="overflow-hidden rounded-md border border-border-steel bg-paper divide-y divide-border-steel">
+        {pageRows.map((row, i) => (
+          <div key={`${row.name}-${i}`}>
+            <PersonCard row={row} index={i} reducedMotion={reducedMotion} />
+          </div>
+        ))}
+      </div>
+      {paginate && <Pagination page={currentPage} pageCount={pageCount} onPageChange={setPage} />}
     </div>
   );
 }

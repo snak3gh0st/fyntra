@@ -4,13 +4,17 @@ import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/Table";
 import { EntityCard, EntityCardList } from "@/components/EntityCard";
 import { Avatar } from "@/components/Avatar";
+import { Pagination, clampPage } from "@/components/Pagination";
 
 type Client = { id: string; name: string; email: string | null; agentName: string };
 
+const GROUPS_PER_PAGE = 8;
+
 export function ClientsList({ clients }: { clients: Client[] }) {
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
-  const groups = useMemo(() => {
+  const allGroups = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = q
       ? clients.filter((c) => c.name.toLowerCase().includes(q) || (c.email ?? "").toLowerCase().includes(q))
@@ -23,6 +27,18 @@ export function ClientsList({ clients }: { clients: Client[] }) {
     }
     return Array.from(byAgent.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [clients, query]);
+
+  // See ProductionTable for why this is state-adjustment-during-render
+  // rather than a useEffect.
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (prevQuery !== query) {
+    setPrevQuery(query);
+    setPage(1);
+  }
+
+  const pageCount = Math.max(1, Math.ceil(allGroups.length / GROUPS_PER_PAGE));
+  const currentPage = clampPage(page, pageCount);
+  const groups = allGroups.slice((currentPage - 1) * GROUPS_PER_PAGE, currentPage * GROUPS_PER_PAGE);
 
   return (
     <div>
@@ -64,6 +80,7 @@ export function ClientsList({ clients }: { clients: Client[] }) {
           </section>
         ))}
       </div>
+      <Pagination page={currentPage} pageCount={pageCount} onPageChange={setPage} />
     </div>
   );
 }

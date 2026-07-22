@@ -5,10 +5,8 @@ import { decimalToNumber } from '@/lib/decimal'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
-import { EmptyState } from '@/components/Table'
-import { EntityCard, EntityCardList } from '@/components/EntityCard'
-import { PolicyStatusPill } from '@/components/StatusPill'
 import { ContextPanel } from '@/components/ContextPanel'
+import { PoliciesList } from './PoliciesList'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,23 +47,19 @@ export default async function PoliciesPage() {
       )}
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
       <div className="max-w-5xl">
-        <EntityCardList>
-          {policies.map((policy, i) => (
-            <EntityCard key={policy.id} index={i} href={`/agent/policies/${policy.id}`}>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">{policy.client?.name ?? '—'}</p>
-                <p className="truncate text-xs text-ink-muted">
-                  <span className="font-mono">{policy.policyNumber}</span> · {policy.carrier} · {policy.product}
-                </p>
-              </div>
-              <span className="shrink-0 font-mono font-medium tabular-nums text-ink">
-                ${decimalToNumber(policy.premium).toFixed(2)}
-              </span>
-              <PolicyStatusPill status={policy.status} />
-            </EntityCard>
-          ))}
-        </EntityCardList>
-        {policies.length === 0 && !loadError && <EmptyState>Nenhuma apólice ainda.</EmptyState>}
+        {!loadError && (
+          <PoliciesList
+            policies={policies.map((p) => ({
+              id: p.id,
+              policyNumber: p.policyNumber,
+              carrier: p.carrier,
+              product: p.product,
+              premium: decimalToNumber(p.premium).toFixed(2),
+              status: p.status,
+              clientName: p.client?.name ?? '—',
+            }))}
+          />
+        )}
       </div>
       <ContextPanel eyebrow="Leitura rápida" title="O que importa aqui">
         <p>O status mostra a situação atual da apólice. O prêmio é o valor recorrente registrado para ela.</p>
