@@ -52,6 +52,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/agent/hierarchy": "Minha hierarquia",
   "/agent/clients": "Clientes",
   "/agent/policies": "Apólices",
+  "/agent/policies/new": "Nova apólice",
   "/agent/commissions": "Extrato de comissões",
   "/client": "Minhas apólices",
 };

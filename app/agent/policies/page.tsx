@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { decimalToNumber } from '@/lib/decimal'
+import Link from 'next/link'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
@@ -40,6 +41,12 @@ export default async function PoliciesPage() {
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
       <PageHeader title="Apólices" eyebrow="Carteira" description="Consulte o status, prêmio e detalhes das apólices da sua operação.">
+        <Link
+          href="/agent/policies/new"
+          className="inline-flex min-h-10 items-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
+        >
+          Nova apólice
+        </Link>
         <span className="inline-flex rounded-full bg-teal-pale px-3 py-1.5 text-xs font-semibold text-teal">{policies.length} apólices</span>
       </PageHeader>
       {loadError && (

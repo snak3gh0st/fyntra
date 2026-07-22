@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { EmptyState } from "@/components/Table";
 import { EntityCard, EntityCardList } from "@/components/EntityCard";
 import { PolicyStatusPill } from "@/components/StatusPill";
@@ -25,7 +26,17 @@ export function PoliciesList({ policies }: { policies: Policy[] }) {
   const pagePolicies = policies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   if (policies.length === 0) {
-    return <EmptyState>Nenhuma apólice ainda.</EmptyState>;
+    return (
+      <div className="space-y-4">
+        <EmptyState>Nenhuma apólice ainda.</EmptyState>
+        <Link
+          href="/agent/policies/new"
+          className="inline-flex w-full justify-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale"
+        >
+          Criar primeira apólice
+        </Link>
+      </div>
+    );
   }
 
   return (
