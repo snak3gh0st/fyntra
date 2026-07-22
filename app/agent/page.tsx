@@ -16,15 +16,17 @@ function StatCard({
   value,
   delta,
   emphasis = false,
+  className = '',
 }: {
   label: string
   value: React.ReactNode
   delta?: number | null
   emphasis?: boolean
+  className?: string
 }) {
   return (
     <div
-      className={`min-h-[118px] border-0 px-5 py-5 ${
+      className={`min-h-[118px] border-0 px-5 py-5 ${className} ${
         emphasis ? 'border-gold-pale bg-gold-pale' : 'border-border-steel bg-panel'
       }`}
     >
@@ -195,6 +197,7 @@ export default async function AgentDashboard() {
       )}
       <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
+          className="sm:col-span-2 lg:col-span-2"
           label="Comissão este mês"
           value={`$${commissionThisMonth.toFixed(2)}`}
           delta={percentChange(commissionThisMonth, commissionLastMonth)}

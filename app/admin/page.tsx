@@ -16,15 +16,17 @@ function Kpi({
   value,
   delta,
   emphasis = false,
+  className = '',
 }: {
   label: string
   value: React.ReactNode
   delta?: number | null
   emphasis?: boolean
+  className?: string
 }) {
   return (
     <div
-      className={`min-h-[118px] border-0 px-5 py-5 ${
+      className={`min-h-[118px] border-0 px-5 py-5 ${className} ${
         emphasis ? 'bg-gold-pale' : 'bg-panel'
       }`}
     >
@@ -126,21 +128,19 @@ export default async function AdminDashboard() {
 
       <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-2 lg:grid-cols-4">
         <Kpi
+          className="sm:col-span-2 lg:col-span-2"
           label="Comissão paga (este mês)"
           value={`$${commissionCurrent.toFixed(2)}`}
           delta={percentChange(commissionCurrent, commissionPrevious)}
           emphasis
         />
-        <Kpi label="Prêmio sob gestão" value={`$${decimalToNumber(premiumAgg._sum.premium).toFixed(2)}`} />
+        <Kpi className="lg:col-span-1" label="Prêmio sob gestão" value={`$${decimalToNumber(premiumAgg._sum.premium).toFixed(2)}`} />
         <Kpi label="Apólices em vigor" value={`${policiesInforce} / ${policiesTotal}`} />
         <Kpi label="Agentes ativos" value={agentsActive} />
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
         <PremiumChart buckets={premiumBuckets} />
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
         <section className="rounded-lg border border-border-steel bg-paper">
           <div className="border-b border-border-steel px-5 py-4">
           <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ export default async function AdminDashboard() {
           </div>
         </section>
 
-        <section className="rounded-lg border border-border-steel bg-paper">
+        <section className="rounded-lg border border-border-steel bg-paper lg:col-span-2">
           <div className="border-b border-border-steel px-5 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink">Atividade recente</h2>

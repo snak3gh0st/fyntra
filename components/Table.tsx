@@ -27,7 +27,7 @@ export function Th({
 export function Tr({ className = "", ...props }: HTMLAttributes<HTMLTableRowElement>) {
   return (
     <tr
-      className={`transition-colors duration-150 hover:bg-teal-pale ${className}`}
+      className={`transition-colors duration-150 odd:bg-paper even:bg-panel/30 hover:bg-teal-pale ${className}`}
       {...props}
     />
   );

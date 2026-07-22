@@ -41,6 +41,21 @@ const NAV: Record<"ADMIN" | "AGENT" | "CLIENT", NavItem[]> = {
   CLIENT: [{ href: "/client", label: "Minhas apólices", icon: "document" }],
 };
 
+const PAGE_NAMES: Record<string, string> = {
+  "/admin": "Painel administrativo",
+  "/admin/agents": "Agentes e hierarquia",
+  "/admin/production": "Produção por agente",
+  "/admin/commission-plans": "Planos de comissão",
+  "/admin/import": "Importar dados",
+  "/admin/audit": "Auditoria",
+  "/agent": "Meu painel",
+  "/agent/hierarchy": "Minha hierarquia",
+  "/agent/clients": "Clientes",
+  "/agent/policies": "Apólices",
+  "/agent/commissions": "Extrato de comissões",
+  "/client": "Minhas apólices",
+};
+
 export function Shell({
   role,
   userName,
@@ -53,6 +68,8 @@ export function Shell({
   const pathname = usePathname();
   const router = useRouter();
   const items = NAV[role];
+  const currentPage = PAGE_NAMES[pathname] ?? (role === "ADMIN" ? "Operação" : role === "AGENT" ? "Minha operação" : "Minha conta");
+  const roleLabel = role === "ADMIN" ? "Administração" : role === "AGENT" ? "Área do agente" : "Portal do cliente";
 
   async function handleSignOut() {
     await authClient.signOut();
@@ -84,6 +101,7 @@ export function Shell({
           <span className="flex items-center gap-2.5 font-sans text-lg font-semibold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-md bg-paper text-teal"><span className="text-sm font-bold">F</span></span>Fyntra</span>
           <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-paper/45">Operações RICOS</p>
         </div>
+        <div className="hidden px-6 pb-2 md:block"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-paper/35">{roleLabel}</p></div>
         <ul className="flex w-full md:flex-1 md:flex-col md:gap-1 md:overflow-y-auto md:px-3">
           {items.map((item) => {
             const active = pathname === item.href;
@@ -118,8 +136,14 @@ export function Shell({
         </div>
       </nav>
 
-      <main className="min-w-0 flex-1 bg-canvas px-4 py-6 pb-24 md:px-10 md:py-10 md:pb-10 lg:px-14">
-        <div className="mx-auto max-w-[1440px]">{children}</div>
+      <main className="min-w-0 flex-1 bg-canvas px-4 py-6 pb-24 md:px-10 md:py-7 md:pb-10 lg:px-14">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="mb-8 flex items-center justify-between border-b border-border-steel/70 pb-4 text-xs">
+            <div className="flex items-center gap-2 text-ink-muted"><span>Fyntra</span><span className="text-ink-muted/40">/</span><span className="font-medium text-ink">{currentPage}</span></div>
+            <span className="flex items-center gap-2 text-ink-muted"><span className="h-1.5 w-1.5 rounded-full bg-success" /> Ambiente operacional</span>
+          </div>
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -24,7 +24,7 @@ export function EntityCard({
       initial={reducedMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.25, delay: Math.min(index, 20) * 0.02, ease: "easeOut" }}
-      className={`group flex items-center gap-3 rounded-md border border-border-steel bg-paper px-4 py-3.5 transition-colors duration-150 hover:border-teal ${className}`}
+      className={`group flex items-center gap-4 rounded-md border border-border-steel bg-paper px-4 py-4 transition-colors duration-150 hover:border-teal ${className}`}
     >
       {children}
     </motion.div>
