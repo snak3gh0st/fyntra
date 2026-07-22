@@ -3,7 +3,7 @@ import { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 export function Table({ children }: { children: React.ReactNode }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border-steel">
-      <table className="w-full border-collapse text-[0.9375rem]">{children}</table>
+      <table className="min-w-full border-collapse text-[0.9375rem]">{children}</table>
     </div>
   );
 }
@@ -18,7 +18,7 @@ export function Th({
 }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={`border-b border-border-steel px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted ${className}`}
+      className={`whitespace-nowrap border-b border-border-steel px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted ${className}`}
       {...props}
     />
   );
@@ -39,7 +39,7 @@ export function Td({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={`border-b border-border-steel px-3 py-2.5 text-ink last:border-b-0 ${className}`}
+      className={`whitespace-nowrap border-b border-border-steel px-3 py-2.5 text-ink last:border-b-0 ${className}`}
       {...props}
     />
   );
