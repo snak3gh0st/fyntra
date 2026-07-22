@@ -4,6 +4,7 @@ import { buildHierarchyOrder } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
 import { HierarchyBoard } from './HierarchyBoard'
+import { ContextPanel } from '@/components/ContextPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,8 +22,15 @@ export default async function AgentsPage() {
   return (
     <Shell role="ADMIN" userName={session.user.name}>
       <PageHeader title="Agentes e hierarquia" eyebrow="Estrutura" description={'Arraste um agente sobre outro para reatribuir o gerente, ou use "Editar" para ajustar rank e gerente diretamente.'} />
-      <div className="mt-8 max-w-3xl">
-        <HierarchyBoard agents={ordered} />
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="max-w-4xl"><HierarchyBoard agents={ordered} /></div>
+        <ContextPanel eyebrow="Administração" title="Mantenha a estrutura clara">
+          <p>Arraste para mudar o gerente. Use editar quando também precisar ajustar o rank.</p>
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Segurança</p>
+            <p className="mt-2">Toda alteração fica registrada na auditoria.</p>
+          </div>
+        </ContextPanel>
       </div>
     </Shell>
   )

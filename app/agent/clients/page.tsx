@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { Avatar } from '@/components/Avatar'
+import { ContextPanel } from '@/components/ContextPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,8 +23,11 @@ export default async function ClientsPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageHeader title="Clientes" eyebrow="Carteira" description="Clientes vinculados a você e à sua downline." />
-      <div className="mt-8 max-w-4xl">
+      <PageHeader title="Clientes" eyebrow="Carteira" description="Clientes vinculados a você e à sua downline.">
+        <span className="inline-flex rounded-full bg-teal-pale px-3 py-1.5 text-xs font-semibold text-teal">{clients.length} clientes</span>
+      </PageHeader>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="max-w-4xl">
         <EntityCardList>
           {clients.map((client, i) => (
             <EntityCard key={client.id} index={i}>
@@ -37,6 +41,14 @@ export default async function ClientsPage() {
           ))}
         </EntityCardList>
         {clients.length === 0 && <EmptyState>Nenhum cliente ainda.</EmptyState>}
+        </div>
+        <ContextPanel eyebrow="Escopo" title="Sua carteira">
+          <p>Esta lista reúne seus clientes e os clientes dos agentes abaixo de você na hierarquia.</p>
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Próximo passo</p>
+            <p className="mt-2">Abra uma apólice para conferir prêmio, status e documentos.</p>
+          </div>
+        </ContextPanel>
       </div>
     </Shell>
   )

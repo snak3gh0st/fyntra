@@ -8,6 +8,7 @@ import { ErrorBanner } from '@/components/ErrorBanner'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { PolicyStatusPill } from '@/components/StatusPill'
+import { ContextPanel } from '@/components/ContextPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,11 +41,14 @@ export default async function PoliciesPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageHeader title="Apólices" eyebrow="Carteira" description="Consulte o status, prêmio e detalhes das apólices da sua operação." />
+      <PageHeader title="Apólices" eyebrow="Carteira" description="Consulte o status, prêmio e detalhes das apólices da sua operação.">
+        <span className="inline-flex rounded-full bg-teal-pale px-3 py-1.5 text-xs font-semibold text-teal">{policies.length} apólices</span>
+      </PageHeader>
       {loadError && (
         <ErrorBanner>Não foi possível carregar suas apólices agora. Tente atualizar a página.</ErrorBanner>
       )}
-      <div className="mt-8 max-w-5xl">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="max-w-5xl">
         <EntityCardList>
           {policies.map((policy, i) => (
             <EntityCard key={policy.id} index={i} href={`/agent/policies/${policy.id}`}>
@@ -62,6 +66,14 @@ export default async function PoliciesPage() {
           ))}
         </EntityCardList>
         {policies.length === 0 && !loadError && <EmptyState>Nenhuma apólice ainda.</EmptyState>}
+      </div>
+      <ContextPanel eyebrow="Leitura rápida" title="O que importa aqui">
+        <p>O status mostra a situação atual da apólice. O prêmio é o valor recorrente registrado para ela.</p>
+        <div className="mt-5 border-t border-white/10 pt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Detalhes</p>
+          <p className="mt-2">Selecione uma linha para abrir a apólice completa e seus documentos.</p>
+        </div>
+      </ContextPanel>
       </div>
     </Shell>
   )

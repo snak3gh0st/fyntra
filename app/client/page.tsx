@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { PolicyStatusPill } from '@/components/StatusPill'
+import { ContextPanel } from '@/components/ContextPanel'
 
 export default async function ClientPortalPage() {
   const session = await requireRole('CLIENT', 'ADMIN')
@@ -24,8 +25,11 @@ export default async function ClientPortalPage() {
 
   return (
     <Shell role="CLIENT" userName={session.user.name}>
-      <PageHeader title="Minhas apólices" eyebrow="Minha conta" description="Consulte suas apólices, status e documentos em um só lugar." />
-      <div className="mt-8 max-w-5xl">
+      <PageHeader title="Minhas apólices" eyebrow="Minha conta" description="Consulte suas apólices, status e documentos em um só lugar.">
+        <span className="inline-flex rounded-full bg-teal-pale px-3 py-1.5 text-xs font-semibold text-teal">{policies.length} apólices</span>
+      </PageHeader>
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="max-w-5xl">
         <EntityCardList>
           {policies.map((policy, i) => (
             <EntityCard key={policy.id} index={i} href={`/client/policies/${policy.id}`}>
@@ -47,6 +51,10 @@ export default async function ClientPortalPage() {
             Nenhuma apólice encontrada. Se você acredita que isso é um erro, fale com seu agente.
           </EmptyState>
         )}
+      </div>
+      <ContextPanel eyebrow="Sua conta" title="Tudo em um lugar">
+        <p>Acompanhe o status das suas apólices e abra qualquer item para acessar os documentos disponíveis.</p>
+      </ContextPanel>
       </div>
     </Shell>
   )
