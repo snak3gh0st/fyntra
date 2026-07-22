@@ -3,15 +3,12 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { getMonthBounds, buildProductionRanking } from '@/lib/agent-production'
+import { periodFromDate } from '@/lib/period'
 import { Shell } from '@/components/Shell'
 import { PageTitle } from '@/components/PageTitle'
 import { Table, Thead, Th, Tr, Td, TdNum } from '@/components/Table'
 import { Select } from '@/components/Field'
 import { Button } from '@/components/Button'
-
-function currentPeriod(now: Date): string {
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-}
 
 export default async function ProductionPage({
   searchParams,
@@ -27,7 +24,7 @@ export default async function ProductionPage({
     orderBy: { period: 'desc' },
   })
   const periods = Array.from(
-    new Set([...distinctPeriods.map((p) => p.period), currentPeriod(new Date())]),
+    new Set([...distinctPeriods.map((p) => p.period), periodFromDate(new Date())]),
   ).sort((a, b) => b.localeCompare(a))
 
   const period = periodParam && periods.includes(periodParam) ? periodParam : periods[0]

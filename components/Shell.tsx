@@ -8,6 +8,7 @@ type NavItem = { href: string; label: string };
 
 const NAV: Record<"ADMIN" | "AGENT" | "CLIENT", NavItem[]> = {
   ADMIN: [
+    { href: "/admin", label: "Painel" },
     { href: "/admin/agents", label: "Hierarquia" },
     { href: "/admin/production", label: "Produção" },
     { href: "/admin/commission-plans", label: "Planos de comissão" },
