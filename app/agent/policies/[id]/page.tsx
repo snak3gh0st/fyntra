@@ -37,6 +37,24 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
   }
   if (!allowed) notFound()
 
+  const policyDocuments = policy.documents.filter((doc) => !doc.storedPath.includes('/illustrations/'))
+  const illustrationDocuments = policy.documents.filter((doc) => doc.storedPath.includes('/illustrations/'))
+
+  const rawIllustrationRequestUrl = process.env.ILLUSTRATION_REQUEST_URL
+  let illustrationRequestUrl: string | null = null
+  if (rawIllustrationRequestUrl) {
+    try {
+      const u = new URL(rawIllustrationRequestUrl)
+      u.searchParams.set('policyId', policy.id)
+      u.searchParams.set('policyNumber', policy.policyNumber)
+      u.searchParams.set('carrier', policy.carrier)
+      u.searchParams.set('product', policy.product)
+      illustrationRequestUrl = u.toString()
+    } catch {
+      illustrationRequestUrl = null
+    }
+  }
+
   return (
     <Shell role={session.user.role as 'ADMIN' | 'AGENT'} userName={session.user.name}>
       <Link href="/agent/policies" className="text-sm font-semibold text-teal hover:text-teal-deep">
@@ -66,62 +84,122 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <section>
-      <h2 className="mb-3 text-base font-semibold text-ink">Comissão gerada por esta apólice</h2>
-      <Table>
-        <Thead>
-          <tr>
-            <Th>Agente</Th>
-            <Th>Tipo</Th>
-            <Th>Nível</Th>
-            <Th>Período</Th>
-            <Th className="text-right">Valor</Th>
-          </tr>
-        </Thead>
-        <tbody>
-          {policy.commissionRecords.map((record, i) => (
-            <Tr key={record.id} index={i}>
-              <Td>{record.agent.user.name}</Td>
-              <Td>{record.type === 'DIRECT' ? 'Direta' : 'Override'}</Td>
-              <Td className="text-ink-muted">{record.level}</Td>
-              <Td className="font-mono">{record.period}</Td>
-              <TdNum>${record.amount.toString()}</TdNum>
-            </Tr>
-          ))}
-        </tbody>
-      </Table>
-      {policy.commissionRecords.length === 0 && <EmptyState>Nenhuma comissão registrada ainda.</EmptyState>}
-      </section>
-      <aside className="space-y-5 lg:sticky lg:top-6">
-      <section className="rounded-md border border-border-steel bg-paper p-5"><h2 className="text-base font-semibold text-ink">Cliente</h2><p className="mt-2 text-sm text-ink">{policy.client.name}</p>{policy.client.email && <p className="mt-1 text-xs text-ink-muted">{policy.client.email}</p>}</section>
-      <section className="rounded-md border border-border-steel bg-paper p-5"><h2 className="mb-3 text-base font-semibold text-ink">Documentos</h2>
-      <ul className="divide-y divide-border-steel rounded-md border border-border-steel bg-panel">
-        {policy.documents.map((doc) => (
-          <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
-            <a href={`/api/documents/${doc.id}`} target="_blank" className="text-teal hover:text-teal-deep">
-              {doc.filename}
-            </a>
-            <span className="text-ink-muted">{(doc.sizeBytes / 1024).toFixed(0)} KB</span>
-          </li>
-        ))}
-      </ul>
-      {policy.documents.length === 0 && <EmptyState>Nenhum documento ainda.</EmptyState>}
+        <section>
+          <h2 className="mb-3 text-base font-semibold text-ink">Comissão gerada por esta apólice</h2>
+          <Table>
+            <Thead>
+              <tr>
+                <Th>Agente</Th>
+                <Th>Tipo</Th>
+                <Th>Nível</Th>
+                <Th>Período</Th>
+                <Th className="text-right">Valor</Th>
+              </tr>
+            </Thead>
+            <tbody>
+              {policy.commissionRecords.map((record, i) => (
+                <Tr key={record.id} index={i}>
+                  <Td>{record.agent.user.name}</Td>
+                  <Td>{record.type === 'DIRECT' ? 'Direta' : 'Override'}</Td>
+                  <Td className="text-ink-muted">{record.level}</Td>
+                  <Td className="font-mono">{record.period}</Td>
+                  <TdNum>${record.amount.toString()}</TdNum>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+          {policy.commissionRecords.length === 0 && <EmptyState>Nenhuma comissão registrada ainda.</EmptyState>}
+        </section>
+        <aside className="space-y-5 lg:sticky lg:top-6">
+          <section className="rounded-md border border-border-steel bg-paper p-5">
+            <h2 className="text-base font-semibold text-ink">Cliente</h2>
+            <p className="mt-2 text-sm text-ink">{policy.client.name}</p>
+            {policy.client.email && <p className="mt-1 text-xs text-ink-muted">{policy.client.email}</p>}
+          </section>
+          <section className="rounded-md border border-border-steel bg-paper p-5">
+            <h2 className="mb-3 text-base font-semibold text-ink">Documentos</h2>
+            <ul className="divide-y divide-border-steel rounded-md border border-border-steel bg-panel">
+              {policyDocuments.map((doc) => (
+                <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <a href={`/api/documents/${doc.id}`} target="_blank" className="text-teal hover:text-teal-deep">
+                    {doc.filename}
+                  </a>
+                  <span className="text-ink-muted">{(doc.sizeBytes / 1024).toFixed(0)} KB</span>
+                </li>
+              ))}
+            </ul>
+            {policyDocuments.length === 0 && <EmptyState>Nenhum documento ainda.</EmptyState>}
 
-      <form action={uploadPolicyDocument} className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border-steel p-4">
-        <input type="hidden" name="policyId" value={policy.id} />
-        <input
-          type="file"
-          name="file"
-          accept=".pdf,.png,.jpg,.jpeg"
-          required
-          className="text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-teal-pale file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal"
-        />
-        <Button type="submit" variant="secondary">
-          Enviar documento
-        </Button>
-      </form>
-      </section>
-      </aside>
+            <form
+              action={uploadPolicyDocument}
+              className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border-steel p-4"
+            >
+              <input type="hidden" name="policyId" value={policy.id} />
+              <input type="hidden" name="documentKind" value="DOCUMENT" />
+              <input
+                type="file"
+                name="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                required
+                className="text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-teal-pale file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal"
+              />
+              <Button type="submit" variant="secondary">
+                Enviar documento
+              </Button>
+            </form>
+          </section>
+          <section className="rounded-md border border-border-steel bg-paper p-5">
+            <h2 className="mb-3 text-base font-semibold text-ink">Ilustrações</h2>
+            <p className="mb-4 text-sm text-ink-muted">
+              Aqui ficam as ilustrações vinculadas à apólice para consulta do time.
+            </p>
+            <ul className="divide-y divide-border-steel rounded-md border border-border-steel bg-panel">
+              {illustrationDocuments.map((doc) => (
+                <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                  <a href={`/api/documents/${doc.id}`} target="_blank" className="text-teal hover:text-teal-deep">
+                    {doc.filename}
+                  </a>
+                  <span className="text-ink-muted">{(doc.sizeBytes / 1024).toFixed(0)} KB</span>
+                </li>
+              ))}
+            </ul>
+            {illustrationDocuments.length === 0 && <EmptyState>Nenhuma ilustração anexada ainda.</EmptyState>}
+
+            <form
+              action={uploadPolicyDocument}
+              className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border-steel p-4"
+            >
+              <input type="hidden" name="policyId" value={policy.id} />
+              <input type="hidden" name="documentKind" value="ILLUSTRATION" />
+              <input
+                type="file"
+                name="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                required
+                className="text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-teal-pale file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal"
+              />
+              <Button type="submit" variant="secondary">
+                Enviar ilustração
+              </Button>
+            </form>
+            <div className="mt-4">
+              {illustrationRequestUrl ? (
+                <a
+                  href={illustrationRequestUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-[background-color,border-color,color,transform] duration-150 hover:border-teal hover:bg-teal-pale/40 focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
+                >
+                  Solicitar ilustração no parceiro
+                </a>
+              ) : (
+                <p className="text-xs text-ink-muted">
+                  Configure <span className="font-mono">ILLUSTRATION_REQUEST_URL</span> no ambiente para ativar o botão de solicitação.
+                </p>
+              )}
+            </div>
+          </section>
+        </aside>
       </div>
     </Shell>
   )

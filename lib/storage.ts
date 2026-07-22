@@ -12,9 +12,12 @@ export function buildStoredPath(
   policyId: string,
   originalFilename: string,
   uuidGenerator: () => string = randomUUID,
+  subdir?: string,
 ): string {
   const safeName = sanitizeFilename(originalFilename)
-  return `policies/${policyId}/${uuidGenerator()}-${safeName}`
+  const base = `policies/${policyId}`
+  if (!subdir) return `${base}/${uuidGenerator()}-${safeName}`
+  return `${base}/${subdir}/${uuidGenerator()}-${safeName}`
 }
 
 export async function saveUploadedFile(

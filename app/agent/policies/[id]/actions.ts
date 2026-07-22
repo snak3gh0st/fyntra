@@ -7,14 +7,18 @@ import { getDownlineIds } from '@/lib/hierarchy'
 import { canAccessPolicy } from '@/lib/policy-access'
 import { buildStoredPath, saveUploadedFile } from '@/lib/storage'
 import { revalidatePath } from 'next/cache'
+import { randomUUID } from 'crypto'
 
 const ALLOWED_TYPES = new Set(['application/pdf', 'image/png', 'image/jpeg'])
 const MAX_SIZE_BYTES = 10 * 1024 * 1024
+const ILLUSTRATION_SUBDIR = 'illustrations'
+const DOCUMENT_KIND_ILLUSTRATION = 'ILLUSTRATION'
 
 export async function uploadPolicyDocument(formData: FormData): Promise<void> {
   const session = await requireRole('ADMIN', 'AGENT')
   const policyId = formData.get('policyId') as string
   const file = formData.get('file') as File
+  const documentKind = (formData.get('documentKind') as string | null) ?? 'DOCUMENT'
 
   const policy = await prisma.policy.findUniqueOrThrow({ where: { id: policyId } })
 
@@ -35,7 +39,13 @@ export async function uploadPolicyDocument(formData: FormData): Promise<void> {
   }
 
   const uploadsDir = process.env.UPLOADS_DIR ?? './uploads'
-  const relativePath = buildStoredPath(policyId, file.name)
+  const isIllustration = documentKind === DOCUMENT_KIND_ILLUSTRATION
+  const relativePath = buildStoredPath(
+    policyId,
+    file.name,
+    randomUUID,
+    isIllustration ? ILLUSTRATION_SUBDIR : undefined,
+  )
   const buffer = Buffer.from(await file.arrayBuffer())
   await saveUploadedFile(uploadsDir, relativePath, buffer)
 
