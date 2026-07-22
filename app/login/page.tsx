@@ -50,7 +50,7 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            placeholder="voce@ricos.test"
+            placeholder="voce@email.com"
           />
         </Field>
         <Field label="Senha">
@@ -64,7 +64,7 @@ export default function LoginPage() {
           />
         </Field>
         {error && (
-          <p className="rounded-md bg-danger-pale px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-md bg-danger-pale px-3 py-2 text-sm text-danger">
             {error}
           </p>
         )}
@@ -72,6 +72,9 @@ export default function LoginPage() {
           {submitting ? 'Entrando…' : 'Entrar'}
         </Button>
       </form>
+      <p className="mt-4 text-center text-sm text-ink-muted">
+        Esqueceu sua senha? Fale com seu agente ou administrador para redefini-la.
+      </p>
     </main>
   )
 }

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
+import { PageTitle } from '@/components/PageTitle'
 import { Table, Thead, Th, Tr, Td, EmptyState } from '@/components/Table'
 
 export const dynamic = 'force-dynamic'
@@ -19,7 +20,7 @@ export default async function ClientsPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <h1 className="text-[1.5rem] font-semibold tracking-tight text-ink">Clientes</h1>
+      <PageTitle>Clientes</PageTitle>
       <div className="mt-6">
         <Table>
           <Thead>

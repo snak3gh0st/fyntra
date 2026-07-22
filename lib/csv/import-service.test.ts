@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { parseCsv, shouldUpdateStatusChangedAt, statusChangedAtForCreate } from './import-service'
+import {
+  deriveStatus,
+  parseCsv,
+  safeParseCsv,
+  shouldUpdateStatusChangedAt,
+  statusChangedAtForCreate,
+} from './import-service'
 
 describe('parseCsv', () => {
   it('parses a header row into keyed objects', () => {
@@ -12,6 +18,35 @@ describe('parseCsv', () => {
   it('returns an empty array for a header-only file', () => {
     const content = 'policyNumber,agentNpn,amount,period'
     expect(parseCsv(content)).toEqual([])
+  })
+})
+
+describe('safeParseCsv', () => {
+  it('returns rows for well-formed CSV', () => {
+    const content = 'policyNumber,agentNpn\nNLG-0002,1000003'
+    const result = safeParseCsv(content)
+    expect(result).toEqual({ rows: [{ policyNumber: 'NLG-0002', agentNpn: '1000003' }] })
+  })
+
+  it('returns an error instead of throwing for malformed CSV', () => {
+    // An unclosed quote makes csv-parse throw synchronously.
+    const content = 'policyNumber,agentNpn\n"NLG-0002,1000003'
+    const result = safeParseCsv(content)
+    expect('error' in result).toBe(true)
+  })
+})
+
+describe('deriveStatus', () => {
+  it('returns COMPLETED when there are no errors', () => {
+    expect(deriveStatus(5, 0)).toBe('COMPLETED')
+  })
+
+  it('returns COMPLETED_WITH_ERRORS when some rows succeeded', () => {
+    expect(deriveStatus(3, 2)).toBe('COMPLETED_WITH_ERRORS')
+  })
+
+  it('returns FAILED when every row errored', () => {
+    expect(deriveStatus(0, 5)).toBe('FAILED')
   })
 })
 

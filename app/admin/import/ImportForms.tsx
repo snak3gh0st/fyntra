@@ -3,22 +3,27 @@
 import { useState } from 'react'
 import { submitPolicyImport, submitCommissionImport } from './actions'
 import { Button } from '@/components/Button'
+import { ImportStatusPill } from '@/components/StatusPill'
+import type { ImportStatus } from '@/lib/csv/import-service'
 
-type Result = { batchId: string; successCount: number; errors: { row: number; message: string }[] }
+type Result = {
+  batchId: string
+  status: ImportStatus
+  successCount: number
+  errors: { row: number; message: string }[]
+}
 
 function ImportResultSummary({ result }: { result: Result }) {
-  const hasErrors = result.errors.length > 0
   return (
-    <div
-      className={`mt-3 rounded-md px-3 py-2.5 text-sm ${
-        hasErrors ? 'bg-gold-pale text-gold' : 'bg-success-pale text-success'
-      }`}
-    >
-      <p className="font-semibold">
-        {result.successCount} linha(s) importada(s), {result.errors.length} erro(s).
-      </p>
-      {hasErrors && (
-        <ul className="mt-1.5 list-disc pl-4 text-ink">
+    <div className="mt-3 rounded-md border border-border-steel px-3 py-2.5 text-sm">
+      <div className="flex items-center gap-2">
+        <ImportStatusPill status={result.status} />
+        <p className="font-semibold text-ink">
+          {result.successCount} linha(s) importada(s), {result.errors.length} erro(s).
+        </p>
+      </div>
+      {result.errors.length > 0 && (
+        <ul aria-live="polite" className="mt-1.5 list-disc pl-4 text-ink">
           {result.errors.map((e) => (
             <li key={e.row}>
               Linha {e.row}: {e.message}
@@ -34,11 +39,13 @@ function ImportCard({
   title,
   action,
   buttonLabel,
+  buttonVariant = 'secondary',
   hint,
 }: {
   title: string
   action: (formData: FormData) => Promise<Result>
   buttonLabel: string
+  buttonVariant?: 'primary' | 'secondary'
   hint?: string
 }) {
   const [result, setResult] = useState<Result | null>(null)
@@ -66,7 +73,7 @@ function ImportCard({
           required
           className="text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-teal-pale file:px-3 file:py-2 file:text-sm file:font-semibold file:text-teal hover:file:bg-teal/20"
         />
-        <Button type="submit" variant="primary" disabled={submitting}>
+        <Button type="submit" variant={buttonVariant} disabled={submitting}>
           {submitting ? 'Importando…' : buttonLabel}
         </Button>
       </form>
@@ -79,12 +86,18 @@ export function ImportForms() {
   return (
     <div className="mt-6 flex flex-col gap-6">
       <ImportCard
-        title="Apólices (CSV)"
+        title="1. Apólices (CSV)"
         action={submitPolicyImport}
         buttonLabel="Importar apólices"
+        buttonVariant="primary"
         hint="Coluna opcional lastPaymentDate (data do último pagamento): sem ela, apólices em vigor sem data de vigência aparecem como &quot;sem sinal de pagamento&quot; nos alertas de risco do agente."
       />
-      <ImportCard title="Comissões (CSV)" action={submitCommissionImport} buttonLabel="Importar comissões" />
+      <ImportCard
+        title="2. Comissões (CSV)"
+        action={submitCommissionImport}
+        buttonLabel="Importar comissões"
+        hint="Importe as apólices primeiro — cada linha de comissão procura a apólice pelo número, e falha se ela ainda não existir."
+      />
     </div>
   )
 }

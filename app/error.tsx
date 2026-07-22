@@ -1,0 +1,37 @@
+"use client";
+
+import Link from "next/link";
+
+export default function GlobalError({
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col items-center justify-center px-4 text-center">
+      <span className="font-sans text-2xl font-semibold tracking-tight text-ink">
+        Fyntra
+      </span>
+      <p className="mt-4 text-sm text-ink">Algo deu errado nesta página.</p>
+      <p className="mt-1 text-sm text-ink-muted">
+        Nada foi perdido. Tente novamente ou volte para o início.
+      </p>
+      <div className="mt-6 flex gap-3">
+        <button
+          type="button"
+          onClick={reset}
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-colors duration-150 hover:bg-teal-deep focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-teal-pale"
+        >
+          Tentar novamente
+        </button>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-colors duration-150 hover:border-teal focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-teal-pale"
+        >
+          Ir para o início
+        </Link>
+      </div>
+    </main>
+  );
+}

@@ -18,17 +18,48 @@ export function statusChangedAtForCreate(status: string): Date | null {
   return status === 'LAPSED' || status === 'CANCELLED' ? null : new Date()
 }
 
+export type ImportStatus = 'COMPLETED' | 'COMPLETED_WITH_ERRORS' | 'FAILED'
+
 type ImportResult = {
   batchId: string
+  status: ImportStatus
   successCount: number
   errors: { row: number; message: string }[]
 }
 
+export function deriveStatus(successCount: number, errorCount: number): ImportStatus {
+  if (errorCount === 0) return 'COMPLETED'
+  return successCount === 0 ? 'FAILED' : 'COMPLETED_WITH_ERRORS'
+}
+
+// A CSV that isn't actually CSV (wrong delimiter, a renamed .xlsx, a stray
+// unescaped quote) makes csv-parse throw synchronously rather than reject a
+// row. Without this, that throw would propagate all the way to the server
+// action with no batch record and no row number — the exact "blank crash on
+// a malformed file" failure mode this import flow otherwise avoids.
+export function safeParseCsv(content: string): { rows: Record<string, string>[] } | { error: string } {
+  try {
+    return { rows: parseCsv(content) }
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err)
+    return { error: `Não foi possível ler o arquivo como CSV: ${reason}` }
+  }
+}
+
 export async function importPolicies(content: string, uploadedById: string, filename: string): Promise<ImportResult> {
-  const rows = parseCsv(content)
   const batch = await prisma.importBatch.create({
     data: { uploadedById, filename, type: 'POLICIES', status: 'PROCESSING' },
   })
+
+  const parseResult = safeParseCsv(content)
+  if ('error' in parseResult) {
+    await prisma.importBatch.update({
+      where: { id: batch.id },
+      data: { status: 'FAILED', rowErrors: [{ row: 0, message: parseResult.error }] },
+    })
+    return { batchId: batch.id, status: 'FAILED', successCount: 0, errors: [{ row: 0, message: parseResult.error }] }
+  }
+  const rows = parseResult.rows
 
   const errors: { row: number; message: string }[] = []
   let successCount = 0
@@ -42,7 +73,7 @@ export async function importPolicies(content: string, uploadedById: string, file
     const row = parsed.data
     const agent = await prisma.agent.findUnique({ where: { npn: row.agentNpn } })
     if (!agent) {
-      errors.push({ row: index + 2, message: `No agent found with NPN ${row.agentNpn}` })
+      errors.push({ row: index + 2, message: `Nenhum agente encontrado com NPN ${row.agentNpn}` })
       continue
     }
     const client = await prisma.client.upsert({
@@ -92,22 +123,29 @@ export async function importPolicies(content: string, uploadedById: string, file
     successCount += 1
   }
 
+  const status = deriveStatus(successCount, errors.length)
   await prisma.importBatch.update({
     where: { id: batch.id },
-    data: {
-      status: errors.length > 0 ? 'COMPLETED_WITH_ERRORS' : 'COMPLETED',
-      rowErrors: errors,
-    },
+    data: { status, rowErrors: errors },
   })
 
-  return { batchId: batch.id, successCount, errors }
+  return { batchId: batch.id, status, successCount, errors }
 }
 
 export async function importCommissions(content: string, uploadedById: string, filename: string): Promise<ImportResult> {
-  const rows = parseCsv(content)
   const batch = await prisma.importBatch.create({
     data: { uploadedById, filename, type: 'COMMISSIONS', status: 'PROCESSING' },
   })
+
+  const parseResult = safeParseCsv(content)
+  if ('error' in parseResult) {
+    await prisma.importBatch.update({
+      where: { id: batch.id },
+      data: { status: 'FAILED', rowErrors: [{ row: 0, message: parseResult.error }] },
+    })
+    return { batchId: batch.id, status: 'FAILED', successCount: 0, errors: [{ row: 0, message: parseResult.error }] }
+  }
+  const rows = parseResult.rows
 
   const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true, rank: true } })
   const plans = await prisma.commissionPlan.findMany()
@@ -131,7 +169,9 @@ export async function importCommissions(content: string, uploadedById: string, f
     if (!agent || !policy) {
       errors.push({
         row: index + 2,
-        message: !agent ? `No agent found with NPN ${row.agentNpn}` : `No policy found with number ${row.policyNumber}`,
+        message: !agent
+          ? `Nenhum agente encontrado com NPN ${row.agentNpn}`
+          : `Nenhuma apólice encontrada com número ${row.policyNumber}`,
       })
       continue
     }
@@ -195,13 +235,11 @@ export async function importCommissions(content: string, uploadedById: string, f
     successCount += 1
   }
 
+  const status = deriveStatus(successCount, errors.length)
   await prisma.importBatch.update({
     where: { id: batch.id },
-    data: {
-      status: errors.length > 0 ? 'COMPLETED_WITH_ERRORS' : 'COMPLETED',
-      rowErrors: errors,
-    },
+    data: { status, rowErrors: errors },
   })
 
-  return { batchId: batch.id, successCount, errors }
+  return { batchId: batch.id, status, successCount, errors }
 }

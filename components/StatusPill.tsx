@@ -2,7 +2,7 @@ type Tone = "success" | "warning" | "danger" | "neutral";
 
 const toneClasses: Record<Tone, string> = {
   success: "bg-success-pale text-success",
-  warning: "bg-gold-pale text-gold",
+  warning: "bg-gold-pale text-gold-ink",
   danger: "bg-danger-pale text-danger",
   neutral: "bg-panel text-ink-muted",
 };
@@ -15,7 +15,7 @@ const policyStatusTone: Record<string, Tone> = {
   CANCELLED: "danger",
 };
 
-const policyStatusLabel: Record<string, string> = {
+export const policyStatusLabel: Record<string, string> = {
   INFORCE: "Em vigor",
   APPROVED: "Aprovada",
   PENDING: "Pendente",
@@ -40,7 +40,7 @@ const importStatusLabel: Record<string, string> = {
 function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide ${toneClasses[tone]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-[3px] text-xs font-semibold tracking-wide ${toneClasses[tone]}`}
     >
       {children}
     </span>

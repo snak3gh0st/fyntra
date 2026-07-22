@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from '@/lib/require-role'
 
@@ -21,16 +22,19 @@ export default async function Home() {
   if (role === 'CLIENT') redirect('/client')
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-4 text-center">
+    <main className="mx-auto flex min-h-screen w-full max-w-sm flex-col items-center justify-center px-4 text-center">
       <span className="font-sans text-2xl font-semibold tracking-tight text-ink">
         Fyntra
       </span>
       <p className="mt-2 text-sm text-ink-muted">
-        Sistema interno da RICOS.{' '}
-        <a href="/login" className="font-semibold text-teal hover:text-teal-deep">
-          Entrar
-        </a>
+        Acesse sua conta para ver suas apólices e comissões.
       </p>
+      <Link
+        href="/login"
+        className="mt-6 inline-flex items-center justify-center gap-2 rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-colors duration-150 hover:bg-teal-deep focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-teal-pale"
+      >
+        Entrar
+      </Link>
     </main>
   )
 }

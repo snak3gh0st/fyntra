@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getDownlineIds, getUplineIds, type AgentNode } from './hierarchy'
+import {
+  buildHierarchyOrder,
+  getDownlineIds,
+  getDownlineWithLevels,
+  getUplineIds,
+  type AgentNode,
+} from './hierarchy'
 
 const agents: AgentNode[] = [
   { id: 'top', parentAgentId: null },
@@ -25,6 +31,39 @@ describe('getUplineIds', () => {
 
   it('returns an empty array for a root node', () => {
     expect(getUplineIds(agents, 'top')).toEqual([])
+  })
+})
+
+describe('getDownlineWithLevels', () => {
+  it('annotates each descendant with its BFS depth from the root', () => {
+    expect(getDownlineWithLevels(agents, 'top')).toEqual([
+      { id: 'mid', level: 1 },
+      { id: 'leaf', level: 2 },
+    ])
+  })
+
+  it('returns an empty array for a leaf node', () => {
+    expect(getDownlineWithLevels(agents, 'leaf')).toEqual([])
+  })
+})
+
+describe('buildHierarchyOrder', () => {
+  it('orders agents root-first, depth-first, with correct depth', () => {
+    expect(buildHierarchyOrder(agents)).toEqual([
+      { id: 'top', depth: 0 },
+      { id: 'mid', depth: 1 },
+      { id: 'leaf', depth: 2 },
+      { id: 'other-top', depth: 0 },
+    ])
+  })
+
+  it('still includes agents unreachable from any root instead of dropping them', () => {
+    const noRoot: AgentNode[] = [
+      { id: 'a', parentAgentId: 'b' },
+      { id: 'b', parentAgentId: 'a' },
+    ]
+    const result = buildHierarchyOrder(noRoot)
+    expect(result.map((r) => r.id).sort()).toEqual(['a', 'b'])
   })
 })
 

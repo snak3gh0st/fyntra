@@ -5,7 +5,9 @@ import { requireRole } from '@/lib/require-role'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { revalidatePath } from 'next/cache'
 
-export async function updateAgentHierarchy(formData: FormData) {
+export type UpdateHierarchyResult = { ok: true } | { ok: false; message: string }
+
+export async function updateAgentHierarchy(formData: FormData): Promise<UpdateHierarchyResult> {
   const session = await requireRole('ADMIN')
 
   const agentId = formData.get('agentId') as string
@@ -14,12 +16,15 @@ export async function updateAgentHierarchy(formData: FormData) {
 
   if (parentAgentId) {
     if (parentAgentId === agentId) {
-      throw new Error('An agent cannot report to itself')
+      return { ok: false, message: 'Um agente não pode reportar para si mesmo.' }
     }
     const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
     const downlineIds = getDownlineIds(allAgents, agentId)
     if (downlineIds.includes(parentAgentId)) {
-      throw new Error('Cannot set parentAgentId to one of the agent\'s own descendants (would create a cycle)')
+      return {
+        ok: false,
+        message: 'Não é possível definir um descendente deste agente como seu superior (criaria um ciclo).',
+      }
     }
   }
 
@@ -41,4 +46,5 @@ export async function updateAgentHierarchy(formData: FormData) {
   })
 
   revalidatePath('/admin/agents')
+  return { ok: true }
 }

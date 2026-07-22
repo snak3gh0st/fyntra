@@ -1,7 +1,7 @@
 import { InputHTMLAttributes, SelectHTMLAttributes } from "react";
 
 const inputClass =
-  "rounded-md border border-border-steel bg-paper px-3 py-2.5 text-sm text-ink outline-none transition-colors duration-150 focus:border-teal focus:ring-[3px] focus:ring-teal-pale";
+  "rounded-md border border-border-steel bg-paper px-3 py-2.5 text-sm text-ink outline-none transition-colors duration-150 focus-visible:border-teal focus-visible:ring-[3px] focus-visible:ring-teal-pale";
 
 export function Field({
   label,

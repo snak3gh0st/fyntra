@@ -13,13 +13,13 @@ import { z } from 'zod'
 const numericString = z.string().transform((val, ctx) => {
   // Reject empty or whitespace-only strings
   if (val.trim() === '') {
-    ctx.addIssue({ code: 'custom', message: 'amount cannot be empty' })
+    ctx.addIssue({ code: 'custom', message: 'o valor não pode ficar vazio' })
     return z.NEVER
   }
   const parsed = Number(val)
   // Use isFinite to reject NaN, Infinity, and -Infinity
   if (!Number.isFinite(parsed)) {
-    ctx.addIssue({ code: 'custom', message: `"${val}" is not a valid number` })
+    ctx.addIssue({ code: 'custom', message: `"${val}" não é um número válido` })
     return z.NEVER
   }
   return parsed
@@ -45,7 +45,7 @@ export const CommissionRowSchema = z.object({
   policyNumber: z.string().min(1),
   agentNpn: z.string().min(1),
   amount: numericString,
-  period: z.string().regex(/^\d{4}-\d{2}$/, 'period must be YYYY-MM'),
+  period: z.string().regex(/^\d{4}-\d{2}$/, 'período deve estar no formato AAAA-MM'),
 })
 
 export type CommissionRow = z.infer<typeof CommissionRowSchema>

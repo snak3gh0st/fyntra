@@ -14,6 +14,11 @@
 
   --color-gold: oklch(0.62 0.15 70);
   --color-gold-pale: oklch(0.93 0.04 70);
+  /* Text-on-gold-pale needs its own darker step: canonical gold text on
+     gold-pale measures ~3:1, under the 4.5:1 AA floor for small bold text
+     (status pill labels). This step (from the design system's own tonal
+     ramp) measures ~6.2:1. */
+  --color-gold-ink: oklch(0.45 0.14 70);
 
   --color-success: oklch(0.46 0.11 155);
   --color-success-pale: oklch(0.94 0.03 155);
@@ -36,6 +41,7 @@
   --color-ink-muted: var(--color-ink-muted);
   --color-gold: var(--color-gold);
   --color-gold-pale: var(--color-gold-pale);
+  --color-gold-ink: var(--color-gold-ink);
   --color-success: var(--color-success);
   --color-success-pale: var(--color-success-pale);
   --color-danger: var(--color-danger);

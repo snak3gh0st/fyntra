@@ -3,7 +3,7 @@ import { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 export function Table({ children }: { children: React.ReactNode }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border-steel">
-      <table className="w-full border-collapse text-sm">{children}</table>
+      <table className="w-full border-collapse text-[0.9375rem]">{children}</table>
     </div>
   );
 }
@@ -51,7 +51,7 @@ export function TdNum({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <Td
-      className={`text-right font-mono tabular-nums ${className}`}
+      className={`text-right font-mono font-medium tabular-nums ${className}`}
       {...props}
     />
   );

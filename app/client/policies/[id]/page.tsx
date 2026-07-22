@@ -1,10 +1,12 @@
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { canAccessPolicy } from '@/lib/policy-access'
 import { Shell } from '@/components/Shell'
+import { PageTitle } from '@/components/PageTitle'
 import { PolicyStatusPill } from '@/components/StatusPill'
 import { EmptyState } from '@/components/Table'
 
@@ -21,22 +23,20 @@ export default async function ClientPolicyDetailPage({ params }: { params: Promi
   let allowed = session.user.role === 'ADMIN'
   if (session.user.role === 'CLIENT') {
     const client = await prisma.client.findUnique({ where: { userId: session.user.id } })
-    if (!client) throw new Error('Signed-in user has no Client record')
+    if (!client) notFound()
     allowed = canAccessPolicy({ role: 'CLIENT', clientId: client.id }, policy)
   }
   if (!allowed) notFound()
 
   return (
     <Shell role="CLIENT" userName={session.user.name}>
-      <a href="/client" className="text-sm font-semibold text-teal hover:text-teal-deep">
+      <Link href="/client" className="text-sm font-semibold text-teal hover:text-teal-deep">
         ← Voltar
-      </a>
-      <h1 className="mt-2 text-[1.5rem] font-semibold tracking-tight text-ink">
-        Apólice {policy.policyNumber}
-      </h1>
+      </Link>
+      <PageTitle className="mt-2">Apólice {policy.policyNumber}</PageTitle>
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Carrier</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Seguradora</p>
           <p className="text-sm text-ink">{policy.carrier}</p>
         </div>
         <div>

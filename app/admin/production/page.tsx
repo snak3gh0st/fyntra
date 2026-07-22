@@ -4,8 +4,10 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { getMonthBounds, buildProductionRanking } from '@/lib/agent-production'
 import { Shell } from '@/components/Shell'
+import { PageTitle } from '@/components/PageTitle'
 import { Table, Thead, Th, Tr, Td, TdNum } from '@/components/Table'
 import { Select } from '@/components/Field'
+import { Button } from '@/components/Button'
 
 function currentPeriod(now: Date): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -61,7 +63,7 @@ export default async function ProductionPage({
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <h1 className="text-[1.5rem] font-semibold tracking-tight text-ink">Produção por agente</h1>
+      <PageTitle>Produção por agente</PageTitle>
 
       <form method="GET" className="mt-4 flex items-center gap-2">
         <Select name="period" defaultValue={period}>
@@ -71,12 +73,9 @@ export default async function ProductionPage({
             </option>
           ))}
         </Select>
-        <button
-          type="submit"
-          className="rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink hover:border-teal"
-        >
+        <Button type="submit" variant="secondary">
           Aplicar
-        </button>
+        </Button>
       </form>
 
       <div className="mt-6">
