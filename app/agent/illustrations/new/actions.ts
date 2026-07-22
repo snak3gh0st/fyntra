@@ -5,7 +5,18 @@ import { getCurrentAgent } from '@/lib/agent-context'
 type TobaccoStatus = 'YES' | 'NO' | 'FORMER'
 
 type CreateIllustrationRequestResult =
-  | { ok: true; requestUrl: string }
+  | {
+      ok: true;
+      requestUrl: string | null;
+      requestQuery: string;
+      requestPayload: {
+        firstName: string;
+        lastName: string;
+        dateOfBirth: string;
+        age: number;
+        tobaccoStatus: TobaccoStatus;
+      };
+    }
   | { ok: false; message: string }
 
 function normalizeText(value: string | null | undefined): string {
@@ -58,8 +69,28 @@ export async function createIllustrationRequest(formData: FormData): Promise<Cre
   }
 
   const rawIllustrationRequestUrl = process.env.ILLUSTRATION_REQUEST_URL
+  const requestPayload = {
+    firstName,
+    lastName,
+    dateOfBirth: dateOfBirthRaw,
+    age,
+    tobaccoStatus,
+  }
+  const requestQuery = new URLSearchParams({
+    firstName,
+    lastName,
+    dateOfBirth: dateOfBirthRaw,
+    age: String(age),
+    tobaccoStatus,
+  }).toString()
+
   if (!rawIllustrationRequestUrl) {
-    return { ok: false, message: 'ILLUSTRATION_REQUEST_URL não está configurada no ambiente.' }
+    return {
+      ok: true,
+      requestUrl: null,
+      requestPayload,
+      requestQuery,
+    }
   }
 
   try {
@@ -69,9 +100,8 @@ export async function createIllustrationRequest(formData: FormData): Promise<Cre
     u.searchParams.set('dateOfBirth', dateOfBirthRaw)
     u.searchParams.set('age', String(age))
     u.searchParams.set('tobaccoStatus', tobaccoStatus)
-    return { ok: true, requestUrl: u.toString() }
+    return { ok: true, requestUrl: u.toString(), requestPayload, requestQuery }
   } catch {
     return { ok: false, message: 'Url de solicitação de ilustração inválida.' }
   }
 }
-

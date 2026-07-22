@@ -6,7 +6,26 @@ import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
 import { createIllustrationRequest } from "./new/actions";
 
-type Message = { ok: boolean; text: string; requestUrl?: string };
+type RequestPayload = {
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  age: number
+  tobaccoStatus: "YES" | "NO" | "FORMER"
+}
+
+type Message =
+  | {
+      ok: true
+      text: string
+      requestUrl: string | null
+      requestQuery: string
+      requestPayload: RequestPayload
+    }
+  | {
+      ok: false
+      text: string
+    }
 
 export function NewIllustrationForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -22,6 +41,8 @@ export function NewIllustrationForm() {
         ok: true,
         text: "Prévia de solicitação pronta. Abra o link abaixo para enviar ao parceiro.",
         requestUrl: result.requestUrl,
+        requestQuery: result.requestQuery,
+        requestPayload: result.requestPayload,
       });
     } else {
       setMessage({ ok: false, text: result.message });
@@ -67,15 +88,33 @@ export function NewIllustrationForm() {
           <p role="alert" className={`text-sm ${message.ok ? "text-success" : "text-danger"}`}>
             {message.text}
           </p>
-          {message.ok && message.requestUrl && (
-            <a
-              href={message.requestUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-10 items-center rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-[background-color,border-color,color,transform] duration-150 hover:border-teal hover:bg-teal-pale/40 focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
-            >
-              Abrir parceiro de ilustração
-            </a>
+          {message.ok && (
+            <>
+              {message.requestUrl ? (
+                <a
+                  href={message.requestUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-10 items-center rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-[background-color,border-color,color,transform] duration-150 hover:border-teal hover:bg-teal-pale/40 focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
+                >
+                  Abrir parceiro de ilustração
+                </a>
+              ) : (
+                <>
+                  <p className="text-sm text-ink-muted">
+                    ILLUSTRATION_REQUEST_URL não está definida no ambiente.
+                  </p>
+                  <p className="text-xs text-ink-muted">Use estes dados para disparar a solicitação no parceiro:</p>
+                  <pre className="overflow-x-auto rounded-md border border-border-steel bg-panel p-3 text-xs">
+                    {JSON.stringify(message.requestPayload, null, 2)}
+                  </pre>
+                  <p className="text-xs text-ink-muted">Query string:</p>
+                  <pre className="overflow-x-auto rounded-md border border-border-steel bg-panel p-3 text-xs">
+                    {message.requestQuery}
+                  </pre>
+                </>
+              )}
+            </>
           )}
           <p>
             <Link href="/agent/policies" className="text-sm text-ink-muted hover:text-ink">
