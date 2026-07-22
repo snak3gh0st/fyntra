@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
@@ -22,6 +22,17 @@ export function NewPolicyForm({ clients }: { clients: ClientOption[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [createdPolicyId, setCreatedPolicyId] = useState<string | null>(null);
+  const [clientSearch, setClientSearch] = useState("");
+
+  const filteredClients = useMemo(() => {
+    const query = clientSearch.trim().toLowerCase();
+    if (!query) return clients;
+    return clients.filter((client) => {
+      const inName = client.name.toLowerCase().includes(query);
+      const inEmail = (client.email ?? "").toLowerCase().includes(query);
+      return inName || inEmail;
+    });
+  }, [clients, clientSearch]);
 
   async function handleSubmit(formData: FormData) {
     setSubmitting(true);
@@ -44,9 +55,18 @@ export function NewPolicyForm({ clients }: { clients: ClientOption[] }) {
       <h2 className="text-base font-semibold text-ink">Preencha os dados da apólice</h2>
       <form action={handleSubmit} className="mt-5 grid gap-4 sm:grid-cols-2">
         <Field label="Cliente">
+          <Input
+            value={clientSearch}
+            onChange={(e) => setClientSearch(e.target.value)}
+            placeholder="Digite nome ou email para filtrar..."
+          />
+        </Field>
+
+        <Field label="Cliente da carteira">
           <Select name="clientId" required className="w-full">
             <option value="new">Novo cliente</option>
-            {clients.map((client) => (
+            {filteredClients.length === 0 && <option disabled>Nenhum cliente encontrado</option>}
+            {filteredClients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.name}
                 {client.email ? ` (${client.email})` : ""}
