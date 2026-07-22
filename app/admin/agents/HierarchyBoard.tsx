@@ -1,306 +1,270 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  useNodesState,
+  useEdgesState,
+  useReactFlow,
+  type Edge,
+  type OnNodeDrag,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { animate } from "motion";
+import { useReducedMotion } from "motion/react";
 import { updateAgentHierarchy } from "./actions";
-import { Select } from "@/components/Field";
-import { Avatar } from "@/components/Avatar";
-import { TreeRow } from "@/components/TreeRow";
-import { computeTreeGuides } from "@/lib/tree-lines";
-import { RANKS } from "@/lib/ranks";
+import { AgentNode, RootZoneNode, type AgentFlowNode, type RootZoneFlowNode } from "./nodes";
+import { layoutHierarchy, ROOT_ZONE_ID } from "@/lib/hierarchy-layout";
 
 type Agent = { id: string; name: string; rank: string; parentAgentId: string | null };
-type OrderedAgent = Agent & { depth: number };
+type FlowNode = AgentFlowNode | RootZoneFlowNode;
 
-function AgentCard({
-  agent,
-  parentName,
-  dragState,
-  editing,
-  onToggleEdit,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDragEnd,
-  onSave,
-  parentOptions,
-  reducedMotion,
-}: {
-  agent: Agent;
-  parentName: string | null;
-  dragState: "idle" | "dragging-self" | "valid-target" | "invalid-target";
-  editing: boolean;
-  onToggleEdit: () => void;
-  onDragStart: (e: React.DragEvent) => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent) => void;
-  onDragEnd: () => void;
-  onSave: (parentAgentId: string | null, rank: string) => Promise<void>;
-  parentOptions: { id: string; name: string }[];
-  reducedMotion: boolean;
-}) {
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+const nodeTypes = { agent: AgentNode, rootzone: RootZoneNode };
 
-  async function handleSubmit(formData: FormData) {
-    setSubmitting(true);
-    setMessage(null);
-    const parentAgentId = (formData.get("parentAgentId") as string) || null;
-    const rank = formData.get("rank") as string;
-    try {
-      await onSave(parentAgentId, rank);
-      setMessage({ ok: true, text: "Salvo." });
-    } catch (err) {
-      setMessage({ ok: false, text: err instanceof Error ? err.message : "Erro ao salvar." });
-    } finally {
-      setSubmitting(false);
-    }
+function isDescendant(agents: Agent[], candidateId: string, ofId: string): boolean {
+  const childrenByParent = new Map<string, string[]>();
+  for (const a of agents) {
+    if (!a.parentAgentId) continue;
+    const list = childrenByParent.get(a.parentAgentId) ?? [];
+    list.push(a.id);
+    childrenByParent.set(a.parentAgentId, list);
   }
-
-  return (
-    <motion.div
-      layout={!reducedMotion}
-      initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-      animate={{
-        opacity: dragState === "dragging-self" ? 0.4 : 1,
-        y: 0,
-        scale: dragState === "dragging-self" ? 0.98 : 1,
-      }}
-      transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }}
-    >
-      <div
-        draggable
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onDragEnd={onDragEnd}
-        className={`group flex cursor-grab items-center gap-3 rounded-lg border bg-paper px-4 py-3 transition-[box-shadow,transform,border-color] duration-150 active:cursor-grabbing ${
-          dragState === "valid-target"
-            ? "border-teal ring-2 ring-teal-pale"
-            : dragState === "invalid-target"
-              ? "border-danger ring-2 ring-danger-pale"
-              : "border-border-steel hover:border-teal"
-        }`}
-      >
-        <span aria-hidden className="select-none text-ink-muted/40">
-          ⠿
-        </span>
-        <Avatar name={agent.name} rank={agent.rank} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-ink">{agent.name}</p>
-          <p className="truncate text-xs text-ink-muted">
-            {parentName ? `Reporta para ${parentName}` : "Topo da hierarquia"}
-          </p>
-        </div>
-        <span className="hidden shrink-0 rounded-full bg-panel px-2.5 py-[3px] text-xs font-semibold text-ink-muted sm:inline">
-          {agent.rank}
-        </span>
-        <button
-          type="button"
-          onClick={onToggleEdit}
-          className="shrink-0 text-xs font-semibold text-teal opacity-100 transition-opacity duration-150 hover:text-teal-deep sm:opacity-0 sm:focus-visible:opacity-100 sm:group-hover:opacity-100"
-        >
-          {editing ? "Fechar" : "Editar"}
-        </button>
-      </div>
-
-      <AnimatePresence initial={false}>
-        {editing && (
-          <motion.div
-            initial={reducedMotion ? false : { height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            transition={reducedMotion ? { duration: 0.1 } : { duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <form action={handleSubmit} className="mt-2 flex flex-wrap items-center gap-2 pl-10">
-              <Select name="parentAgentId" defaultValue={agent.parentAgentId ?? ""} className="w-44">
-                <option value="">— nenhum —</option>
-                {parentOptions.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </Select>
-              <Select name="rank" defaultValue={agent.rank} className="w-32">
-                {!RANKS.includes(agent.rank as (typeof RANKS)[number]) && (
-                  <option value={agent.rank}>{agent.rank}</option>
-                )}
-                {RANKS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </Select>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="inline-flex items-center justify-center rounded-md border border-border-steel bg-paper px-3 py-1.5 text-xs font-semibold text-ink hover:border-teal disabled:opacity-50"
-              >
-                {submitting ? "Salvando…" : "Salvar"}
-              </button>
-              {message && (
-                <span role="alert" className={`text-xs ${message.ok ? "text-success" : "text-danger"}`}>
-                  {message.text}
-                </span>
-              )}
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
+  const stack = [...(childrenByParent.get(ofId) ?? [])];
+  while (stack.length > 0) {
+    const current = stack.pop() as string;
+    if (current === candidateId) return true;
+    stack.push(...(childrenByParent.get(current) ?? []));
+  }
+  return false;
 }
 
-export function HierarchyBoard({
-  agents,
-}: {
-  agents: OrderedAgent[];
-}) {
+function HierarchyCanvas({ agents }: { agents: Agent[] }) {
   const reducedMotion = useReducedMotion() ?? false;
+  const rf = useReactFlow<FlowNode>();
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  const [edges, setEdges] = useEdgesState<Edge>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | "root" | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [pending, setPending] = useState<{ agentId: string; parentAgentId: string | null } | null>(null);
   const [banner, setBanner] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const committedRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const nodesRef = useRef<FlowNode[]>([]);
+  const stopAnimRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
 
   const byId = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
   const parentOptions = useMemo(() => agents.map((a) => ({ id: a.id, name: a.name })), [agents]);
-  const treeGuides = useMemo(() => computeTreeGuides(agents), [agents]);
 
-  // A descendant can't become its own ancestor's manager — computed on the
-  // fly per drag so the invalid-target ring reacts immediately, without a
-  // round trip to the server.
-  function isDescendant(candidateId: string, ofId: string): boolean {
-    const childrenByParent = new Map<string, string[]>();
-    for (const a of agents) {
-      if (!a.parentAgentId) continue;
-      const list = childrenByParent.get(a.parentAgentId) ?? [];
-      list.push(a.id);
-      childrenByParent.set(a.parentAgentId, list);
-    }
-    const stack = [...(childrenByParent.get(ofId) ?? [])];
-    while (stack.length > 0) {
-      const current = stack.pop()!;
-      if (current === candidateId) return true;
-      stack.push(...(childrenByParent.get(current) ?? []));
-    }
-    return false;
-  }
-
-  async function reassign(agentId: string, parentAgentId: string | null, rank: string) {
+  const reassign = useCallback(async (agentId: string, parentAgentId: string | null, rank: string) => {
     const formData = new FormData();
     formData.set("agentId", agentId);
     formData.set("parentAgentId", parentAgentId ?? "");
     formData.set("rank", rank);
     const result = await updateAgentHierarchy(formData);
     if (!result.ok) throw new Error(result.message);
-  }
+  }, []);
 
-  async function handleDrop(targetId: string | "root") {
-    const sourceId = draggedId;
-    setDraggedId(null);
-    setOverId(null);
-    if (!sourceId) return;
-    if (targetId === sourceId) return;
-    const newParentId = targetId === "root" ? null : targetId;
-    if (newParentId && isDescendant(newParentId, sourceId)) return;
+  // Recomputes the tree layout whenever the agent list changes (first load,
+  // or once a reassignment revalidates the page with fresh data). Positions
+  // are tweened through React state — not CSS — so edges, which are
+  // recomputed from node position each render, glide in sync with their
+  // nodes instead of snapping to the new shape a frame early or late.
+  useEffect(() => {
+    const { positions, edges: rawEdges } = layoutHierarchy(agents);
+    const nextEdges: Edge[] = rawEdges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      type: "smoothstep",
+      style: { stroke: "var(--color-border-steel)", strokeWidth: 1.5 },
+    }));
 
-    const source = byId.get(sourceId);
-    if (!source) return;
+    const agentNodes: AgentFlowNode[] = agents.map((agent) => ({
+      id: agent.id,
+      type: "agent",
+      position: positions.get(agent.id) ?? { x: 0, y: 0 },
+      draggable: true,
+      data: {
+        name: agent.name,
+        rank: agent.rank,
+        parentName: agent.parentAgentId ? (byId.get(agent.parentAgentId)?.name ?? null) : null,
+        currentParentAgentId: agent.parentAgentId,
+        dragState: "idle",
+        editing: false,
+        parentOptions: parentOptions.filter((p) => p.id !== agent.id),
+        onToggleEdit: () => setEditingId((id) => (id === agent.id ? null : agent.id)),
+        onSave: async (parentAgentId: string | null, rank: string) => {
+          await reassign(agent.id, parentAgentId, rank);
+          setBanner({ ok: true, text: `${agent.name} atualizado.` });
+          setEditingId(null);
+        },
+      },
+    }));
+    const rootZoneNode: RootZoneFlowNode = {
+      id: ROOT_ZONE_ID,
+      type: "rootzone",
+      position: positions.get(ROOT_ZONE_ID) ?? { x: 0, y: -140 },
+      draggable: false,
+      selectable: false,
+      data: { active: false },
+    };
+    const targetNodes: FlowNode[] = [...agentNodes, rootZoneNode];
 
-    setPending({ agentId: sourceId, parentAgentId: newParentId });
-    setBanner(null);
-    try {
-      await reassign(sourceId, newParentId, source.rank);
-      setBanner({ ok: true, text: `${source.name} atualizado.` });
-    } catch (err) {
-      setBanner({ ok: false, text: err instanceof Error ? err.message : "Erro ao mover agente." });
-    } finally {
-      setPending(null);
+    stopAnimRef.current?.();
+    const prevCommitted = committedRef.current;
+    committedRef.current = positions;
+    setEdges(nextEdges);
+
+    if (prevCommitted.size === 0 || reducedMotion) {
+      setNodes(targetNodes);
+      return;
     }
-  }
 
-  function dragStateFor(agentId: string): "idle" | "dragging-self" | "valid-target" | "invalid-target" {
-    if (draggedId === agentId) return "dragging-self";
-    if (overId === agentId && draggedId) {
-      return isDescendant(agentId, draggedId) || agentId === draggedId ? "invalid-target" : "valid-target";
-    }
-    return "idle";
-  }
+    const fromPositions = new Map(nodesRef.current.map((n) => [n.id, n.position]));
+    const controls = animate(0, 1, {
+      duration: 0.45,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (t: number) => {
+        setNodes(
+          targetNodes.map((n) => {
+            const from = fromPositions.get(n.id) ?? n.position;
+            const to = n.position;
+            return { ...n, position: { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t } };
+          }),
+        );
+      },
+    });
+    stopAnimRef.current = () => controls.stop();
+    // agents is the only input that should re-trigger a layout pass.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents]);
+
+  const onNodeDragStart: OnNodeDrag<FlowNode> = useCallback((_e, node) => {
+    if (node.type !== "agent") return;
+    setDraggedId(node.id);
+  }, []);
+
+  const onNodeDrag: OnNodeDrag<FlowNode> = useCallback(
+    (_e, node) => {
+      if (node.type !== "agent") return;
+      const candidate = rf.getIntersectingNodes(node, true).find((n) => n.id !== node.id);
+      setOverId(candidate ? candidate.id : null);
+    },
+    [rf],
+  );
+
+  const onNodeDragStop: OnNodeDrag<FlowNode> = useCallback(
+    async (_e, node) => {
+      if (node.type !== "agent") return;
+      const targetId = overId;
+      setDraggedId(null);
+      setOverId(null);
+
+      const snapBack = () => {
+        setNodes((nds) =>
+          nds.map((n) => (n.id === node.id ? { ...n, position: committedRef.current.get(node.id) ?? n.position } : n)),
+        );
+      };
+
+      const agent = byId.get(node.id);
+      if (!agent || !targetId || targetId === node.id) {
+        snapBack();
+        return;
+      }
+      const newParentId = targetId === ROOT_ZONE_ID ? null : targetId;
+      if (newParentId === agent.parentAgentId) {
+        snapBack();
+        return;
+      }
+      if (newParentId && isDescendant(agents, newParentId, agent.id)) {
+        setBanner({ ok: false, text: "Não é possível mover um agente para dentro da própria downline." });
+        snapBack();
+        return;
+      }
+      try {
+        await reassign(agent.id, newParentId, agent.rank);
+        setBanner({ ok: true, text: `${agent.name} atualizado.` });
+      } catch (err) {
+        setBanner({ ok: false, text: err instanceof Error ? err.message : "Erro ao mover agente." });
+        snapBack();
+      }
+    },
+    [overId, byId, agents, reassign, setNodes],
+  );
+
+  const displayNodes = useMemo<FlowNode[]>(
+    () =>
+      nodes.map((n) => {
+        if (n.type === "rootzone") {
+          return { ...n, data: { ...n.data, active: Boolean(draggedId) && overId === ROOT_ZONE_ID } };
+        }
+        if (n.type === "agent") {
+          let dragState: "idle" | "valid-target" | "invalid-target" = "idle";
+          if (draggedId && draggedId !== n.id && overId === n.id) {
+            dragState = isDescendant(agents, n.id, draggedId) ? "invalid-target" : "valid-target";
+          }
+          return { ...n, data: { ...n.data, dragState, editing: editingId === n.id } };
+        }
+        return n;
+      }),
+    [nodes, draggedId, overId, editingId, agents],
+  );
 
   return (
     <div>
       {banner && (
         <p
           role="alert"
-          className={`mb-3 rounded-md px-3 py-2 text-sm ${
-            banner.ok ? "bg-success-pale text-success" : "bg-danger-pale text-danger"
-          }`}
+          className={`mb-3 rounded-md px-3 py-2 text-sm ${banner.ok ? "bg-success-pale text-success" : "bg-danger-pale text-danger"}`}
         >
           {banner.text}
         </p>
       )}
-
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setOverId("root");
-        }}
-        onDragLeave={() => setOverId((id) => (id === "root" ? null : id))}
-        onDrop={(e) => {
-          e.preventDefault();
-          handleDrop("root");
-        }}
-        className={`mb-4 flex items-center justify-center rounded-lg border border-dashed px-4 py-3 text-xs font-semibold uppercase tracking-wide transition-colors duration-150 ${
-          overId === "root" && draggedId
-            ? "border-teal bg-teal-pale text-teal"
-            : "border-border-steel text-ink-muted"
-        }`}
-      >
-        Arraste aqui para remover o gerente (topo da hierarquia)
-      </div>
-
-      <div className="flex flex-col">
-        {agents.map((agent, i) => (
-          <TreeRow key={agent.id} depth={agent.depth} ancestorGuides={treeGuides[i].ancestorGuides} hasNextSibling={treeGuides[i].hasNextSibling}>
-            <AgentCard
-              agent={agent}
-              parentName={agent.parentAgentId ? (byId.get(agent.parentAgentId)?.name ?? null) : null}
-              dragState={pending?.agentId === agent.id ? "dragging-self" : dragStateFor(agent.id)}
-              editing={editingId === agent.id}
-              onToggleEdit={() => setEditingId((id) => (id === agent.id ? null : agent.id))}
-              reducedMotion={reducedMotion}
-              parentOptions={parentOptions.filter((p) => p.id !== agent.id)}
-              onSave={async (parentAgentId, rank) => {
-                await reassign(agent.id, parentAgentId, rank);
-                setBanner({ ok: true, text: `${agent.name} atualizado.` });
-                setEditingId(null);
-              }}
-              onDragStart={(e) => {
-                setDraggedId(agent.id);
-                e.dataTransfer.effectAllowed = "move";
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setOverId(agent.id);
-              }}
-              onDragLeave={() => setOverId((id) => (id === agent.id ? null : id))}
-              onDrop={(e) => {
-                e.preventDefault();
-                handleDrop(agent.id);
-              }}
-              onDragEnd={() => {
-                setDraggedId(null);
-                setOverId(null);
-              }}
-            />
-          </TreeRow>
-        ))}
+      <div className="hierarchy-flow relative h-[70vh] min-h-[520px] w-full overflow-hidden rounded-lg border border-border-steel bg-panel/40">
+        <ReactFlow
+          nodes={displayNodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodesChange={onNodesChange}
+          onNodeDragStart={onNodeDragStart}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStop={onNodeDragStop}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          fitView
+          fitViewOptions={{ padding: 0.15, minZoom: 0.5, maxZoom: 1 }}
+          minZoom={0.2}
+          maxZoom={1.5}
+        >
+          <Background variant={BackgroundVariant.Dots} gap={24} size={1} color="var(--color-border-steel)" />
+          <Controls showInteractive={false} position="bottom-right" />
+          <MiniMap
+            position="bottom-left"
+            pannable
+            zoomable
+            nodeStrokeWidth={0}
+            nodeColor="var(--color-border-steel)"
+            maskColor="oklch(0.99 0.004 200 / 0.75)"
+          />
+        </ReactFlow>
       </div>
     </div>
+  );
+}
+
+export function HierarchyBoard({ agents }: { agents: Agent[] }) {
+  return (
+    <ReactFlowProvider>
+      <HierarchyCanvas agents={agents} />
+    </ReactFlowProvider>
   );
 }

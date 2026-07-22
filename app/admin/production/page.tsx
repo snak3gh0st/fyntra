@@ -6,10 +6,10 @@ import { getMonthBounds, buildProductionRanking } from '@/lib/agent-production'
 import { periodFromDate } from '@/lib/period'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
-import { Table, Thead, Th, Tr, Td, TdNum } from '@/components/Table'
 import { Select } from '@/components/Field'
 import { Button } from '@/components/Button'
 import { ContextPanel } from '@/components/ContextPanel'
+import { ProductionTable } from './ProductionTable'
 
 export default async function ProductionPage({
   searchParams,
@@ -66,26 +66,7 @@ export default async function ProductionPage({
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         <section>
           <div className="mb-4 flex items-baseline justify-between"><h2 className="text-base font-semibold text-ink">Ranking do período</h2><span className="text-xs text-ink-muted">{rows.length} agentes</span></div>
-        <Table>
-          <Thead>
-            <tr>
-              <Th>Agente</Th>
-              <Th className="text-right">Apólices</Th>
-              <Th className="text-right">Prêmio total</Th>
-              <Th className="text-right">Comissão total</Th>
-            </tr>
-          </Thead>
-          <tbody>
-            {rows.map((row) => (
-              <Tr key={row.agentId}>
-                <Td className="font-medium">{row.agentName}</Td>
-                <TdNum>{row.policyCount}</TdNum>
-                <TdNum>${row.premiumTotal.toFixed(2)}</TdNum>
-                <TdNum>${row.commissionTotal.toFixed(2)}</TdNum>
-              </Tr>
-            ))}
-          </tbody>
-        </Table>
+        <ProductionTable rows={rows} />
         </section>
         <aside className="space-y-5 lg:sticky lg:top-6">
           <form method="GET" className="rounded-lg border border-border-steel bg-paper p-5"><h2 className="text-base font-semibold text-ink">Filtrar período</h2><p className="mt-1 text-sm text-ink-muted">Escolha o mês que deseja comparar.</p><label className="mt-4 flex flex-col gap-2"><span className="text-xs font-semibold text-ink-muted">Mês</span><Select name="period" defaultValue={period}>{periods.map((p) => <option key={p} value={p}>{p}</option>)}</Select></label><Button type="submit" variant="primary" className="mt-4 w-full">Aplicar filtro</Button></form>

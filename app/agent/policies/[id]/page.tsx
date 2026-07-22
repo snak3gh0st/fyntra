@@ -79,8 +79,8 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           </tr>
         </Thead>
         <tbody>
-          {policy.commissionRecords.map((record) => (
-            <Tr key={record.id}>
+          {policy.commissionRecords.map((record, i) => (
+            <Tr key={record.id} index={i}>
               <Td>{record.agent.user.name}</Td>
               <Td>{record.type === 'DIRECT' ? 'Direta' : 'Override'}</Td>
               <Td className="text-ink-muted">{record.level}</Td>

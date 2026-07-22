@@ -37,10 +37,10 @@ export default async function AuditPage() {
             </tr>
           </Thead>
           <tbody>
-            {logs.map((log) => {
+            {logs.map((log, i) => {
               const diffs = diffAuditFields(log.before, log.after)
               return (
-                <Tr key={log.id}>
+                <Tr key={log.id} index={i}>
                   <Td className="whitespace-nowrap font-mono text-ink-muted">
                     {log.createdAt.toLocaleString('pt-BR')}
                   </Td>

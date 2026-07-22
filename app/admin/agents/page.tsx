@@ -22,8 +22,8 @@ export default async function AgentsPage() {
   return (
     <Shell role="ADMIN" userName={session.user.name}>
       <PageHeader title="Agentes e hierarquia" eyebrow="Estrutura" description={'Arraste um agente sobre outro para reatribuir o gerente, ou use "Editar" para ajustar rank e gerente diretamente.'} />
-      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="max-w-4xl"><HierarchyBoard agents={ordered} /></div>
+      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_280px]">
+        <HierarchyBoard agents={ordered} />
         <ContextPanel eyebrow="Administração" title="Mantenha a estrutura clara">
           <p>Arraste para mudar o gerente. Use editar quando também precisar ajustar o rank.</p>
           <div className="mt-5 border-t border-white/10 pt-4">

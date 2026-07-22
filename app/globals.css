@@ -102,3 +102,38 @@ table {
 ::selection {
   background: var(--color-teal-pale);
 }
+
+/* Hierarchy canvas (React Flow): positions are tweened via JS in
+   HierarchyBoard, not CSS, so edges stay glued to nodes each frame — the
+   library's own transform transition would fight that and lag behind. */
+.hierarchy-flow .react-flow__node {
+  transition: none;
+}
+.hierarchy-flow .react-flow__pane {
+  cursor: default;
+}
+.hierarchy-flow .react-flow__attribution {
+  background: transparent;
+  font-size: 10px;
+  opacity: 0.6;
+}
+.hierarchy-flow .react-flow__controls {
+  box-shadow: none;
+  border: 1px solid var(--color-border-steel);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.hierarchy-flow .react-flow__controls-button {
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-border-steel);
+  fill: var(--color-ink-muted);
+}
+.hierarchy-flow .react-flow__controls-button:hover {
+  background: var(--color-panel);
+}
+.hierarchy-flow .react-flow__minimap {
+  border: 1px solid var(--color-border-steel);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-paper);
+}
