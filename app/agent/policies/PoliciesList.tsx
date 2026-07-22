@@ -29,12 +29,20 @@ export function PoliciesList({ policies }: { policies: Policy[] }) {
     return (
       <div className="space-y-4">
         <EmptyState>Nenhuma apólice ainda.</EmptyState>
-        <Link
-          href="/agent/policies/new"
-          className="inline-flex w-full justify-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale"
-        >
-          Criar primeira apólice
-        </Link>
+        <div className="space-y-3">
+          <Link
+            href="/agent/policies/new"
+            className="inline-flex w-full justify-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale"
+          >
+            Criar primeira apólice
+          </Link>
+          <Link
+            href="/agent/illustrations/new"
+            className="inline-flex w-full justify-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale"
+          >
+            Criar primeira ilustração
+          </Link>
+        </div>
       </div>
     );
   }

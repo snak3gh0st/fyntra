@@ -41,12 +41,20 @@ export default async function PoliciesPage() {
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
       <PageHeader title="Apólices" eyebrow="Carteira" description="Consulte o status, prêmio e detalhes das apólices da sua operação.">
-        <Link
-          href="/agent/policies/new"
-          className="inline-flex min-h-10 items-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
-        >
-          Nova apólice
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/agent/policies/new"
+            className="inline-flex min-h-10 items-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
+          >
+            Nova apólice
+          </Link>
+          <Link
+            href="/agent/illustrations/new"
+            className="inline-flex min-h-10 items-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
+          >
+            Nova ilustração
+          </Link>
+        </div>
         <span className="inline-flex rounded-full bg-teal-pale px-3 py-1.5 text-xs font-semibold text-teal">{policies.length} apólices</span>
       </PageHeader>
       {loadError && (
