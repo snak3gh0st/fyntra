@@ -21,6 +21,10 @@ type Message =
       requestUrl: string | null
       requestQuery: string
       requestPayload: RequestPayload
+      submitted: boolean
+      executionMessage: string
+      executionStatusCode: number | null
+      partnerResponseSnippet?: string
     }
   | {
       ok: false
@@ -37,12 +41,19 @@ export function NewIllustrationForm() {
 
     const result = await createIllustrationRequest(formData);
     if (result.ok) {
+      const text = result.submitted
+        ? "Solicitação enviada com sucesso para o endpoint de ilustração."
+        : "Prévia de solicitação pronta. Abra o link abaixo para enviar ao parceiro."
       setMessage({
         ok: true,
-        text: "Prévia de solicitação pronta. Abra o link abaixo para enviar ao parceiro.",
+        text,
         requestUrl: result.requestUrl,
         requestQuery: result.requestQuery,
         requestPayload: result.requestPayload,
+        submitted: result.submitted,
+        executionMessage: result.executionMessage,
+        executionStatusCode: result.executionStatusCode,
+        partnerResponseSnippet: result.partnerResponseSnippet,
       });
     } else {
       setMessage({ ok: false, text: result.message });
@@ -90,6 +101,7 @@ export function NewIllustrationForm() {
           </p>
           {message.ok && (
             <>
+              <p className="text-sm text-ink-muted">{message.executionMessage}</p>
               {message.requestUrl ? (
                 <a
                   href={message.requestUrl}
@@ -97,7 +109,7 @@ export function NewIllustrationForm() {
                   rel="noreferrer"
                   className="inline-flex min-h-10 items-center rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-[background-color,border-color,color,transform] duration-150 hover:border-teal hover:bg-teal-pale/40 focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
                 >
-                  Abrir parceiro de ilustração
+                  Abrir resposta do parceiro
                 </a>
               ) : (
                 <>
@@ -113,6 +125,20 @@ export function NewIllustrationForm() {
                     {message.requestQuery}
                   </pre>
                 </>
+              )}
+              {message.partnerResponseSnippet ? (
+                <details>
+                  <summary className="cursor-pointer text-xs font-semibold text-ink-muted">Resposta do parceiro</summary>
+                  <pre className="mt-2 overflow-x-auto rounded-md border border-border-steel bg-panel p-3 text-xs">
+                    {message.partnerResponseSnippet}
+                  </pre>
+                </details>
+              ) : null}
+              {message.executionStatusCode ? (
+                <p className="text-xs text-ink-muted">Status HTTP: {message.executionStatusCode}</p>
+              ) : null}
+              {message.submitted ? null : (
+                <p className="text-xs text-ink-muted">Sem envio automático configurado no momento.</p>
               )}
             </>
           )}

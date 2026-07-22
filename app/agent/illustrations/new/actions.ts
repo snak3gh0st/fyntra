@@ -3,19 +3,26 @@
 import { getCurrentAgent } from '@/lib/agent-context'
 
 type TobaccoStatus = 'YES' | 'NO' | 'FORMER'
+type RequestMethod = 'GET' | 'POST'
+
+type RequestPayload = {
+  firstName: string
+  lastName: string
+  dateOfBirth: string
+  age: number
+  tobaccoStatus: TobaccoStatus
+}
 
 type CreateIllustrationRequestResult =
   | {
-      ok: true;
-      requestUrl: string | null;
-      requestQuery: string;
-      requestPayload: {
-        firstName: string;
-        lastName: string;
-        dateOfBirth: string;
-        age: number;
-        tobaccoStatus: TobaccoStatus;
-      };
+      ok: true
+      requestUrl: string | null
+      requestQuery: string
+      requestPayload: RequestPayload
+      submitted: boolean
+      executionMessage: string
+      executionStatusCode: number | null
+      partnerResponseSnippet?: string
     }
   | { ok: false; message: string }
 
@@ -36,6 +43,140 @@ function calculateAgeFromDOB(dob: Date): number {
     now.getMonth() > dob.getMonth() || (now.getMonth() === dob.getMonth() && now.getDate() >= dob.getDate())
   if (!hasBirthdayPassed) age -= 1
   return age
+}
+
+function parseRequestMethod(): RequestMethod {
+  const rawMethod = process.env.ILLUSTRATION_REQUEST_METHOD?.trim().toUpperCase()
+  return rawMethod === 'POST' ? 'POST' : 'GET'
+}
+
+function parseRequestTimeoutMs(): number {
+  const rawTimeout = process.env.ILLUSTRATION_REQUEST_TIMEOUT_MS
+  if (!rawTimeout) return 12000
+
+  const parsed = Number.parseInt(rawTimeout, 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 12000
+  return Math.max(3000, parsed)
+}
+
+function buildQueryString(payload: RequestPayload): string {
+  return new URLSearchParams({
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    dateOfBirth: payload.dateOfBirth,
+    age: String(payload.age),
+    tobaccoStatus: payload.tobaccoStatus,
+  }).toString()
+}
+
+function snippet(text: string, maxLength = 600): string {
+  if (text.length <= maxLength) return text
+  return `${text.slice(0, maxLength - 3)}...`
+}
+
+async function requestIllustrationFromProvider(payload: RequestPayload): Promise<{
+  requestUrl: string | null
+  executionMessage: string
+  executionStatusCode: number | null
+  partnerResponseSnippet: string | null
+  submitted: boolean
+  requestQuery: string
+}> {
+  const rawUrl = process.env.ILLUSTRATION_REQUEST_URL?.trim()
+  const requestQuery = buildQueryString(payload)
+
+  if (!rawUrl) {
+    return {
+      requestUrl: null,
+      executionMessage: 'ILLUSTRATION_REQUEST_URL não está definida. O payload abaixo está pronto para envio manual.',
+      executionStatusCode: null,
+      partnerResponseSnippet: null,
+      submitted: false,
+      requestQuery,
+    }
+  }
+
+  if (parseRequestMethod() === 'GET') {
+    const u = new URL(rawUrl)
+    u.searchParams.set('firstName', payload.firstName)
+    u.searchParams.set('lastName', payload.lastName)
+    u.searchParams.set('dateOfBirth', payload.dateOfBirth)
+    u.searchParams.set('age', String(payload.age))
+    u.searchParams.set('tobaccoStatus', payload.tobaccoStatus)
+    return {
+      requestUrl: u.toString(),
+      executionMessage: 'URL de solicitação preparada no padrão GET.',
+      executionStatusCode: null,
+      partnerResponseSnippet: null,
+      submitted: false,
+      requestQuery,
+    }
+  }
+
+  const controller = new AbortController()
+  const timeout = parseRequestTimeoutMs()
+  const timer = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    const authToken = process.env.ILLUSTRATION_REQUEST_AUTH_TOKEN?.trim()
+    const authHeader = process.env.ILLUSTRATION_REQUEST_AUTH_HEADER?.trim()
+    const useBearer = process.env.ILLUSTRATION_REQUEST_AUTH_BEARER?.trim()
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    }
+
+    if (authToken) {
+      if (authHeader) {
+        headers[authHeader] = authToken
+      } else if (useBearer === '1' || useBearer?.toLowerCase() === 'true') {
+        headers.Authorization = `Bearer ${authToken}`
+      } else {
+        headers['X-Api-Key'] = authToken
+      }
+    }
+
+    const response = await fetch(rawUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+    const rawResponse = await response.text()
+    const contentType = response.headers.get('content-type') ?? ''
+    const locationHeader = response.headers.get('location')
+    const responseSnippet = rawResponse ? snippet(rawResponse) : null
+
+    if (!response.ok) {
+      throw new Error(
+        `Falha na resposta do parceiro: ${response.status} ${response.statusText}${
+          responseSnippet ? ` — ${responseSnippet}` : ''
+        }`,
+      )
+    }
+
+    let partnerUrl: string | null = null
+    if (contentType.includes('application/json')) {
+      try {
+        const parsed = JSON.parse(rawResponse) as { url?: string; requestUrl?: string; nextUrl?: string }
+        partnerUrl = parsed.url ?? parsed.requestUrl ?? parsed.nextUrl ?? null
+      } catch {}
+    }
+    if (!partnerUrl && locationHeader) {
+      partnerUrl = locationHeader
+    }
+
+    return {
+      requestUrl: partnerUrl ?? rawUrl,
+      executionMessage: `Solicitação enviada via POST com sucesso (${response.status}).`,
+      executionStatusCode: response.status,
+      partnerResponseSnippet: responseSnippet,
+      submitted: true,
+      requestQuery,
+    }
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export async function createIllustrationRequest(formData: FormData): Promise<CreateIllustrationRequestResult> {
@@ -68,40 +209,34 @@ export async function createIllustrationRequest(formData: FormData): Promise<Cre
     }
   }
 
-  const rawIllustrationRequestUrl = process.env.ILLUSTRATION_REQUEST_URL
-  const requestPayload = {
+  const requestPayload: RequestPayload = {
     firstName,
     lastName,
     dateOfBirth: dateOfBirthRaw,
     age,
     tobaccoStatus,
   }
-  const requestQuery = new URLSearchParams({
-    firstName,
-    lastName,
-    dateOfBirth: dateOfBirthRaw,
-    age: String(age),
-    tobaccoStatus,
-  }).toString()
-
-  if (!rawIllustrationRequestUrl) {
-    return {
-      ok: true,
-      requestUrl: null,
-      requestPayload,
-      requestQuery,
-    }
-  }
 
   try {
-    const u = new URL(rawIllustrationRequestUrl)
-    u.searchParams.set('firstName', firstName)
-    u.searchParams.set('lastName', lastName)
-    u.searchParams.set('dateOfBirth', dateOfBirthRaw)
-    u.searchParams.set('age', String(age))
-    u.searchParams.set('tobaccoStatus', tobaccoStatus)
-    return { ok: true, requestUrl: u.toString(), requestPayload, requestQuery }
-  } catch {
-    return { ok: false, message: 'Url de solicitação de ilustração inválida.' }
+    const result = await requestIllustrationFromProvider(requestPayload)
+    return {
+      ok: true,
+      requestUrl: result.requestUrl,
+      requestQuery: result.requestQuery,
+      requestPayload,
+      submitted: result.submitted,
+      executionMessage: result.executionMessage,
+      executionStatusCode: result.executionStatusCode,
+      partnerResponseSnippet: result.partnerResponseSnippet ?? undefined,
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        return { ok: false, message: 'Tempo limite para contato com parceiro encerrado antes da resposta.' }
+      }
+      return { ok: false, message: error.message }
+    }
+
+    return { ok: false, message: 'Falha desconhecida ao solicitar ilustração.' }
   }
 }

@@ -40,7 +40,8 @@ export default async function NewIllustrationPage() {
           <div className="mt-5 border-t border-white/10 pt-4">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Integração</p>
             <p className="mt-2 text-sm text-ink-muted">
-              O botão é construído a partir de <span className="font-mono">ILLUSTRATION_REQUEST_URL</span>.
+              O fluxo consulta <span className="font-mono">ILLUSTRATION_REQUEST_URL</span>. Se configurado como <span className="font-mono">POST</span>,
+              o app envia JSON direto para essa API; caso contrário, abre querystring em modo GET.
             </p>
           </div>
         </ContextPanel>
@@ -48,4 +49,3 @@ export default async function NewIllustrationPage() {
     </Shell>
   )
 }
-
