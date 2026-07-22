@@ -5,6 +5,8 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { updateAgentHierarchy } from "./actions";
 import { Select } from "@/components/Field";
 import { Avatar } from "@/components/Avatar";
+import { TreeRow } from "@/components/TreeRow";
+import { computeTreeGuides } from "@/lib/tree-lines";
 import { RANKS } from "@/lib/ranks";
 
 type Agent = { id: string; name: string; rank: string; parentAgentId: string | null };
@@ -12,7 +14,6 @@ type OrderedAgent = Agent & { depth: number };
 
 function AgentCard({
   agent,
-  depth,
   parentName,
   dragState,
   editing,
@@ -27,7 +28,6 @@ function AgentCard({
   reducedMotion,
 }: {
   agent: Agent;
-  depth: number;
   parentName: string | null;
   dragState: "idle" | "dragging-self" | "valid-target" | "invalid-target";
   editing: boolean;
@@ -69,7 +69,6 @@ function AgentCard({
         scale: dragState === "dragging-self" ? 0.98 : 1,
       }}
       transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }}
-      style={{ marginLeft: `${Math.min(depth, 6) * 1.5}rem` }}
     >
       <div
         draggable
@@ -170,6 +169,7 @@ export function HierarchyBoard({
 
   const byId = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
   const parentOptions = useMemo(() => agents.map((a) => ({ id: a.id, name: a.name })), [agents]);
+  const treeGuides = useMemo(() => computeTreeGuides(agents), [agents]);
 
   // A descendant can't become its own ancestor's manager — computed on the
   // fly per drag so the invalid-target ring reacts immediately, without a
@@ -264,41 +264,41 @@ export function HierarchyBoard({
         Arraste aqui para remover o gerente (topo da hierarquia)
       </div>
 
-      <div className="flex flex-col gap-2">
-        {agents.map((agent) => (
-          <AgentCard
-            key={agent.id}
-            agent={agent}
-            depth={agent.depth}
-            parentName={agent.parentAgentId ? (byId.get(agent.parentAgentId)?.name ?? null) : null}
-            dragState={pending?.agentId === agent.id ? "dragging-self" : dragStateFor(agent.id)}
-            editing={editingId === agent.id}
-            onToggleEdit={() => setEditingId((id) => (id === agent.id ? null : agent.id))}
-            reducedMotion={reducedMotion}
-            parentOptions={parentOptions.filter((p) => p.id !== agent.id)}
-            onSave={async (parentAgentId, rank) => {
-              await reassign(agent.id, parentAgentId, rank);
-              setBanner({ ok: true, text: `${agent.name} atualizado.` });
-              setEditingId(null);
-            }}
-            onDragStart={(e) => {
-              setDraggedId(agent.id);
-              e.dataTransfer.effectAllowed = "move";
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setOverId(agent.id);
-            }}
-            onDragLeave={() => setOverId((id) => (id === agent.id ? null : id))}
-            onDrop={(e) => {
-              e.preventDefault();
-              handleDrop(agent.id);
-            }}
-            onDragEnd={() => {
-              setDraggedId(null);
-              setOverId(null);
-            }}
-          />
+      <div className="flex flex-col">
+        {agents.map((agent, i) => (
+          <TreeRow key={agent.id} depth={agent.depth} ancestorGuides={treeGuides[i].ancestorGuides} hasNextSibling={treeGuides[i].hasNextSibling}>
+            <AgentCard
+              agent={agent}
+              parentName={agent.parentAgentId ? (byId.get(agent.parentAgentId)?.name ?? null) : null}
+              dragState={pending?.agentId === agent.id ? "dragging-self" : dragStateFor(agent.id)}
+              editing={editingId === agent.id}
+              onToggleEdit={() => setEditingId((id) => (id === agent.id ? null : agent.id))}
+              reducedMotion={reducedMotion}
+              parentOptions={parentOptions.filter((p) => p.id !== agent.id)}
+              onSave={async (parentAgentId, rank) => {
+                await reassign(agent.id, parentAgentId, rank);
+                setBanner({ ok: true, text: `${agent.name} atualizado.` });
+                setEditingId(null);
+              }}
+              onDragStart={(e) => {
+                setDraggedId(agent.id);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOverId(agent.id);
+              }}
+              onDragLeave={() => setOverId((id) => (id === agent.id ? null : id))}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDrop(agent.id);
+              }}
+              onDragEnd={() => {
+                setDraggedId(null);
+                setOverId(null);
+              }}
+            />
+          </TreeRow>
         ))}
       </div>
     </div>

@@ -3,10 +3,8 @@ import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
-import { EmptyState } from '@/components/Table'
-import { EntityCard, EntityCardList } from '@/components/EntityCard'
-import { Avatar } from '@/components/Avatar'
 import { ContextPanel } from '@/components/ContextPanel'
+import { ClientsList } from './ClientsList'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,19 +26,9 @@ export default async function ClientsPage() {
       </PageHeader>
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="max-w-4xl">
-        <EntityCardList>
-          {clients.map((client, i) => (
-            <EntityCard key={client.id} index={i}>
-              <Avatar name={client.name} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-ink">{client.name}</p>
-                <p className="truncate text-xs text-ink-muted">{client.email ?? 'Sem email cadastrado'}</p>
-              </div>
-              <span className="shrink-0 text-xs text-ink-muted">{client.assignedAgent.user.name}</span>
-            </EntityCard>
-          ))}
-        </EntityCardList>
-        {clients.length === 0 && <EmptyState>Nenhum cliente ainda.</EmptyState>}
+          <ClientsList
+            clients={clients.map((c) => ({ id: c.id, name: c.name, email: c.email, agentName: c.assignedAgent.user.name }))}
+          />
         </div>
         <ContextPanel eyebrow="Escopo" title="Sua carteira">
           <p>Esta lista reúne seus clientes e os clientes dos agentes abaixo de você na hierarquia.</p>

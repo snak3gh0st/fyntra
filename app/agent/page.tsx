@@ -10,51 +10,8 @@ import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { policyStatusLabel } from '@/components/StatusPill'
-
-function StatCard({
-  label,
-  value,
-  delta,
-  emphasis = false,
-  className = '',
-}: {
-  label: string
-  value: React.ReactNode
-  delta?: number | null
-  emphasis?: boolean
-  className?: string
-}) {
-  return (
-    <div
-      className={`min-h-[118px] border-0 px-5 py-5 ${className} ${
-        emphasis ? 'border-gold-pale bg-gold-pale' : 'border-border-steel bg-panel'
-      }`}
-    >
-      <p
-        className={`text-xs font-semibold uppercase tracking-wide ${
-          emphasis ? 'text-gold-ink' : 'text-ink-muted'
-        }`}
-      >
-        {label}
-      </p>
-      <div className="mt-1 flex items-baseline gap-2">
-        <p
-          className={`font-mono tabular-nums ${
-            emphasis ? 'text-3xl font-semibold text-gold-ink' : 'text-2xl font-medium text-ink'
-          }`}
-        >
-          {value}
-        </p>
-        {delta !== undefined && delta !== null && (
-          <span className={`font-mono text-xs font-semibold ${delta >= 0 ? 'text-success' : 'text-danger'}`}>
-            {delta >= 0 ? '+' : ''}
-            {delta.toFixed(0)}% vs mês anterior
-          </span>
-        )}
-      </div>
-    </div>
-  )
-}
+import { StatCard, StatCardHero } from '@/components/StatCard'
+import { TrendChart } from '@/components/TrendChart'
 
 function BreakdownList({
   title,
@@ -84,26 +41,6 @@ function BreakdownList({
         ))}
         {rows.length === 0 && <li className="text-sm text-ink-muted">Nenhum dado ainda.</li>}
       </ul>
-    </div>
-  )
-}
-
-function MonthlyChart({ buckets }: { buckets: { month: string; count: number }[] }) {
-  const max = Math.max(1, ...buckets.map((b) => b.count))
-  return (
-    <div className="rounded-lg border border-border-steel bg-panel px-5 py-4">
-      <h2 className="text-sm font-semibold text-ink">Apólices criadas por mês</h2>
-      <div className="mt-4 flex h-32 items-end gap-2">
-        {buckets.map((b) => (
-          <div key={b.month} className="flex flex-1 flex-col items-center gap-1">
-            <div
-              className="w-full rounded-t-sm bg-teal"
-              style={{ height: `${(b.count / max) * 100}%`, minHeight: b.count > 0 ? '4px' : '0' }}
-            />
-            <span className="text-[10px] text-ink-muted">{b.month.slice(5)}</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -195,14 +132,18 @@ export default async function AgentDashboard() {
           Não foi possível carregar seus dados agora. Os números abaixo podem estar incompletos — tente atualizar a página.
         </ErrorBanner>
       )}
-      <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          className="sm:col-span-2 lg:col-span-2"
+      <div className="mt-8">
+        <StatCardHero
           label="Comissão este mês"
           value={`$${commissionThisMonth.toFixed(2)}`}
           delta={percentChange(commissionThisMonth, commissionLastMonth)}
-          emphasis
-        />
+          deltaSuffix=" vs mês anterior"
+        >
+          <TrendChart compact data={monthlyBuckets.map((b) => ({ label: b.month.slice(5), value: b.count }))} />
+        </StatCardHero>
+      </div>
+
+      <div className="mt-px grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-3">
         <StatCard label="Comissão total" value={`$${commissionTotalAmount.toFixed(2)}`} />
         <StatCard label="Minhas apólices" value={policyCount} />
         <StatCard label="Tamanho da minha downline" value={downlineIds.length} />
@@ -223,8 +164,11 @@ export default async function AgentDashboard() {
         />
       </div>
 
-      <div className="mt-8">
-        <MonthlyChart buckets={monthlyBuckets} />
+      <div className="mt-8 rounded-lg border border-border-steel bg-panel px-5 py-4">
+        <h2 className="text-sm font-semibold text-ink">Apólices criadas por mês</h2>
+        <div className="mt-4">
+          <TrendChart data={monthlyBuckets.map((b) => ({ label: b.month.slice(5), value: b.count }))} format="count" />
+        </div>
       </div>
     </Shell>
   )
