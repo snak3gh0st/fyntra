@@ -3,7 +3,9 @@ import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
 import { PageTitle } from '@/components/PageTitle'
-import { Table, Thead, Th, Tr, Td, EmptyState } from '@/components/Table'
+import { EmptyState } from '@/components/Table'
+import { EntityCard, EntityCardList } from '@/components/EntityCard'
+import { Avatar } from '@/components/Avatar'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,25 +23,19 @@ export default async function ClientsPage() {
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
       <PageTitle>Clientes</PageTitle>
-      <div className="mt-6">
-        <Table>
-          <Thead>
-            <tr>
-              <Th>Nome</Th>
-              <Th>Email</Th>
-              <Th>Agente responsável</Th>
-            </tr>
-          </Thead>
-          <tbody>
-            {clients.map((client) => (
-              <Tr key={client.id}>
-                <Td className="font-medium">{client.name}</Td>
-                <Td className="text-ink-muted">{client.email ?? '—'}</Td>
-                <Td>{client.assignedAgent.user.name}</Td>
-              </Tr>
-            ))}
-          </tbody>
-        </Table>
+      <div className="mt-6 max-w-2xl">
+        <EntityCardList>
+          {clients.map((client, i) => (
+            <EntityCard key={client.id} index={i}>
+              <Avatar name={client.name} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-ink">{client.name}</p>
+                <p className="truncate text-xs text-ink-muted">{client.email ?? 'Sem email cadastrado'}</p>
+              </div>
+              <span className="shrink-0 text-xs text-ink-muted">{client.assignedAgent.user.name}</span>
+            </EntityCard>
+          ))}
+        </EntityCardList>
         {clients.length === 0 && <EmptyState>Nenhum cliente ainda.</EmptyState>}
       </div>
     </Shell>

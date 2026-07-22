@@ -1,24 +1,14 @@
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
+import { decimalToNumber } from '@/lib/decimal'
 import { Shell } from '@/components/Shell'
 import { PageTitle } from '@/components/PageTitle'
 import { ErrorBanner } from '@/components/ErrorBanner'
-import { Table, Thead, Th, Tr, Td, TdNum, EmptyState } from '@/components/Table'
+import { EmptyState } from '@/components/Table'
+import { EntityCard, EntityCardList } from '@/components/EntityCard'
 
 export const dynamic = 'force-dynamic'
-
-function safeDecimalToString(value: unknown): string {
-  if (value == null) return '0.00'
-  if (typeof value === 'string') return value
-  if (typeof value === 'number') return value.toFixed(2)
-  const decimalValue = value as { toString?: () => string; toNumber?: () => number }
-  if (typeof decimalValue.toNumber === 'function') {
-    const num = decimalValue.toNumber()
-    return Number.isFinite(num) ? num.toFixed(2) : '0.00'
-  }
-  if (typeof decimalValue.toString === 'function') return decimalValue.toString()
-  return String(value)
-}
 
 type Record_ = {
   id: string
@@ -49,7 +39,7 @@ export default async function CommissionsPage() {
   const periods = Array.from(new Set(records.map((r) => r.period)))
   const byPeriod = periods.map((period) => {
     const rows = records.filter((r) => r.period === period)
-    const subtotal = rows.reduce((sum, r) => sum + Number(safeDecimalToString(r.amount)), 0)
+    const subtotal = rows.reduce((sum, r) => sum + decimalToNumber(r.amount), 0)
     return { period, rows, subtotal }
   })
 
@@ -63,51 +53,44 @@ export default async function CommissionsPage() {
       )}
       <p className="mt-2 text-sm text-ink-muted">
         Nível 0 é sua venda direta. Nível 1+ é repasse (override) de uma venda da sua downline —
-        a coluna &quot;Origem&quot; mostra qual agente vendeu a apólice.
+        &quot;Origem&quot; mostra qual agente vendeu a apólice.
       </p>
-      <div className="mt-4">
+      <div className="mt-4 max-w-2xl">
         {byPeriod.map(({ period, rows, subtotal }) => (
           <div key={period} className="mb-6">
-            <h2 className="mb-2 font-mono text-sm font-semibold text-ink-muted">{period}</h2>
-            <Table>
-              <Thead>
-                <tr>
-                  <Th>Apólice</Th>
-                  <Th>Origem</Th>
-                  <Th>Tipo</Th>
-                  <Th className="text-right">Nível</Th>
-                  <Th className="text-right">Valor</Th>
-                </tr>
-              </Thead>
-              <tbody>
-                {rows.map((record) => (
-                  <Tr key={record.id}>
-                    <Td className="font-mono">
+            <div className="mb-2 flex items-baseline justify-between">
+              <h2 className="font-mono text-sm font-semibold text-ink-muted">{period}</h2>
+              <span className="font-mono text-xs text-ink-muted">
+                Subtotal <span className="font-semibold text-ink">${subtotal.toFixed(2)}</span>
+              </span>
+            </div>
+            <EntityCardList>
+              {rows.map((record, i) => (
+                <EntityCard key={record.id} index={i}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-ink">
                       {record.policy ? (
-                        <a
+                        <Link
                           href={`/agent/policies/${record.policy.id}`}
-                          className="text-teal hover:text-teal-deep"
+                          className="font-mono hover:text-teal"
                         >
                           {record.policy.policyNumber}
-                        </a>
+                        </Link>
                       ) : (
                         '—'
                       )}
-                    </Td>
-                    <Td className="text-ink-muted">{record.policy?.agent.user.name ?? '—'}</Td>
-                    <Td>{record.type === 'DIRECT' ? 'Direta' : 'Repasse'}</Td>
-                    <TdNum className="text-ink-muted">{record.level}</TdNum>
-                    <TdNum>${safeDecimalToString(record.amount)}</TdNum>
-                  </Tr>
-                ))}
-                <Tr className="hover:bg-transparent">
-                  <Td colSpan={4} className="text-right font-semibold text-ink-muted">
-                    Subtotal do período
-                  </Td>
-                  <TdNum className="font-semibold">${subtotal.toFixed(2)}</TdNum>
-                </Tr>
-              </tbody>
-            </Table>
+                    </p>
+                    <p className="truncate text-xs text-ink-muted">
+                      {record.policy?.agent.user.name ?? '—'} · {record.type === 'DIRECT' ? 'Direta' : 'Repasse'} ·
+                      Nível {record.level}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-mono font-medium tabular-nums text-ink">
+                    ${decimalToNumber(record.amount).toFixed(2)}
+                  </span>
+                </EntityCard>
+              ))}
+            </EntityCardList>
           </div>
         ))}
         {records.length === 0 && !loadError && (

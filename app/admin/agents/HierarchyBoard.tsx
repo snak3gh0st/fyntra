@@ -4,20 +4,11 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { updateAgentHierarchy } from "./actions";
 import { Select } from "@/components/Field";
+import { Avatar } from "@/components/Avatar";
 import { RANKS } from "@/lib/ranks";
 
 type Agent = { id: string; name: string; rank: string; parentAgentId: string | null };
 type OrderedAgent = Agent & { depth: number };
-
-const RANK_TONE: Record<string, string> = {
-  DIRECTOR: "bg-teal text-paper",
-  MANAGER: "bg-gold text-paper",
-};
-
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase();
-}
 
 function AgentCard({
   agent,
@@ -98,13 +89,7 @@ function AgentCard({
         <span aria-hidden className="select-none text-ink-muted/40">
           ⠿
         </span>
-        <div
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-            RANK_TONE[agent.rank] ?? "border border-border-steel bg-panel text-ink-muted"
-          }`}
-        >
-          {initials(agent.name)}
-        </div>
+        <Avatar name={agent.name} rank={agent.rank} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-ink">{agent.name}</p>
           <p className="truncate text-xs text-ink-muted">
