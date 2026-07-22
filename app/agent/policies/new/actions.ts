@@ -2,6 +2,7 @@
 
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+import { calculateMarketPremium, parseAgeBand, parseFaceBand } from '@/lib/policy-quote'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { revalidatePath } from 'next/cache'
@@ -10,7 +11,7 @@ const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'INFORCE', 'LAPSED', 'CANCELLED']
 type PolicyStatus = (typeof STATUS_OPTIONS)[number]
 
 type CreatePolicyResult =
-  | { ok: true; policyId: string; policyNumber: string }
+  | { ok: true; policyId: string; policyNumber: string; premium: number; premiumSource: "market" | "manual" }
   | { ok: false; message: string }
 
 function normalizeMoney(value: string | null | undefined): number | null {
@@ -50,8 +51,28 @@ export async function createPolicy(formData: FormData): Promise<CreatePolicyResu
   const faceAmount = normalizeMoney(formData.get('faceAmount') as string | null)
   if (faceAmount === null) return { ok: false, message: 'O valor segurado é obrigatório e deve ser numérico.' }
 
-  const premium = normalizeMoney(formData.get('premium') as string | null)
-  if (premium === null) return { ok: false, message: 'O prêmio é obrigatório e deve ser numérico.' }
+  const pricingMode = (formData.get('pricingMode') as string | null)?.trim() || 'market'
+  const quoteAgeBand = parseAgeBand(formData.get('quoteAgeBand') as string | null)
+  const quoteFaceBand = parseFaceBand(formData.get('quoteFaceBand') as string | null, faceAmount)
+  const marketQuote = calculateMarketPremium({
+    product,
+    faceAmount,
+    ageBand: quoteAgeBand,
+    faceBand: quoteFaceBand,
+  })
+  const useMarketQuote = pricingMode === 'market'
+  const requestedPremium = useMarketQuote ? null : normalizeMoney(formData.get('premium') as string | null)
+  const premiumSource = useMarketQuote ? 'market' : 'manual'
+  if (!useMarketQuote && requestedPremium === null) {
+    return { ok: false, message: 'O prêmio manual é obrigatório e deve ser numérico.' }
+  }
+
+  let finalPremium: number
+  if (useMarketQuote) {
+    finalPremium = marketQuote.premium
+  } else {
+    finalPremium = requestedPremium ?? 0
+  }
 
   const rawStatus = (formData.get('status') as string | null)?.trim()
   if (!rawStatus || !STATUS_OPTIONS.includes(rawStatus as PolicyStatus)) {
@@ -118,7 +139,7 @@ export async function createPolicy(formData: FormData): Promise<CreatePolicyResu
         product,
         policyNumber,
         faceAmount,
-        premium,
+        premium: finalPremium,
         status,
         effectiveDate,
         lastPaymentDate,
@@ -129,7 +150,13 @@ export async function createPolicy(formData: FormData): Promise<CreatePolicyResu
 
     revalidatePath('/agent/policies')
     revalidatePath(`/agent/policies/${policy.id}`)
-    return { ok: true, policyId: policy.id, policyNumber: policy.policyNumber }
+    return {
+      ok: true,
+      policyId: policy.id,
+      policyNumber: policy.policyNumber,
+      premium: finalPremium,
+      premiumSource,
+    }
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return { ok: false, message: 'Já existe uma apólice com este número.' }

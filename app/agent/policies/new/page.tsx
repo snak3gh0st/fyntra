@@ -58,6 +58,14 @@ export default async function NewPolicyPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Status</p>
             <p className="mt-2 text-sm text-ink-muted">A data de início e último pagamento são opcionais.</p>
           </div>
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Cotação</p>
+            <p className="mt-2 text-sm text-ink-muted">
+              Term 15 / 20 / 30 e IUL (como “Indexed Universal Life”) possuem taxa de simulação de mercado específica.
+              Também existe ajuste por faixa etária e faixa de cobertura para simular cenários de cotação.
+              A ilustração formal ainda não é gerada aqui; por ora, a criação já aplica o prêmio cotado automaticamente.
+            </p>
+          </div>
         </ContextPanel>
       </div>
     </Shell>
