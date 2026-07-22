@@ -51,7 +51,7 @@ export default async function CommissionsPage() {
           Não foi possível carregar seu extrato agora. Tente atualizar a página.
         </ErrorBanner>
       )}
-      <div className="mt-8 max-w-2xl">
+      <div className="mt-8 max-w-4xl">
         {byPeriod.map(({ period, rows, subtotal }) => (
           <div key={period} className="mb-6">
             <div className="mb-2 flex items-baseline justify-between">

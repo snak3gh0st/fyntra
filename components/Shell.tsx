@@ -65,12 +65,12 @@ export function Shell({
       {/* Mobile-only top bar: deliberately far from the bottom nav so a
           distracted, one-handed tap near "Sair" can never land on a nav
           destination instead (or vice versa). */}
-      <div className="flex items-center justify-between border-b border-border-steel bg-panel px-4 py-3 md:hidden">
-        <span className="flex items-center gap-2 font-sans text-base font-semibold tracking-tight text-ink"><span className="grid h-7 w-7 place-items-center rounded-md bg-teal text-paper"><span className="text-xs font-bold">F</span></span>Fyntra</span>
+      <div className="flex items-center justify-between bg-rail px-4 py-3 text-paper md:hidden">
+        <span className="flex items-center gap-2 font-sans text-base font-semibold tracking-tight"><span className="grid h-7 w-7 place-items-center rounded-md bg-paper text-teal"><span className="text-xs font-bold">F</span></span>Fyntra</span>
         <button
           type="button"
           onClick={handleSignOut}
-          className="text-xs font-semibold text-ink-muted hover:text-ink"
+          className="text-xs font-semibold text-paper/70 hover:text-paper"
         >
           Sair
         </button>
@@ -78,11 +78,11 @@ export function Shell({
 
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 flex shrink-0 border-t border-border-steel bg-panel/95 backdrop-blur-sm md:static md:h-screen md:w-[252px] md:flex-col md:border-t-0 md:border-r md:bg-panel md:backdrop-blur-none"
+        className="fixed inset-x-0 bottom-0 z-30 flex shrink-0 border-t border-white/10 bg-rail/95 text-paper backdrop-blur-sm md:static md:h-screen md:w-[252px] md:flex-col md:border-t-0 md:border-r-0 md:bg-rail md:backdrop-blur-none"
       >
         <div className="hidden px-6 pb-7 pt-8 md:block">
-          <span className="flex items-center gap-2.5 font-sans text-lg font-semibold tracking-tight text-ink"><span className="grid h-8 w-8 place-items-center rounded-md bg-teal text-paper"><span className="text-sm font-bold">F</span></span>Fyntra</span>
-          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-ink-muted">Operações RICOS</p>
+          <span className="flex items-center gap-2.5 font-sans text-lg font-semibold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-md bg-paper text-teal"><span className="text-sm font-bold">F</span></span>Fyntra</span>
+          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-paper/45">Operações RICOS</p>
         </div>
         <ul className="flex w-full md:flex-1 md:flex-col md:gap-1 md:overflow-y-auto md:px-3">
           {items.map((item) => {
@@ -94,8 +94,8 @@ export function Shell({
                   aria-current={active ? "page" : undefined}
                   className={`flex flex-1 flex-col items-center gap-1 whitespace-nowrap px-1 py-2.5 text-center text-[10px] font-semibold md:flex-row md:rounded-md md:px-3 md:py-2.5 md:text-left md:text-sm ${
                     active
-                      ? "bg-teal-pale text-teal"
-                      : "text-ink-muted hover:text-ink"
+                      ? "bg-paper/10 text-paper"
+                      : "text-paper/55 hover:bg-paper/5 hover:text-paper"
                   }`}
                 >
                   <NavIcon name={item.icon} />
@@ -105,21 +105,21 @@ export function Shell({
             );
           })}
         </ul>
-        <div className="hidden border-t border-border-steel px-6 py-5 md:block">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Conta conectada</p>
-          <p className="mt-1 truncate text-sm font-medium text-ink">{userName}</p>
+        <div className="hidden border-t border-white/10 px-6 py-5 md:block">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-paper/45">Conta conectada</p>
+          <p className="mt-1 truncate text-sm font-medium text-paper">{userName}</p>
           <button
             type="button"
             onClick={handleSignOut}
-            className="mt-2 text-xs font-semibold text-ink-muted hover:text-ink"
+            className="mt-2 text-xs font-semibold text-paper/55 hover:text-paper"
           >
             Sair
           </button>
         </div>
       </nav>
 
-      <main className="min-w-0 flex-1 px-4 py-6 pb-24 md:px-10 md:py-10 md:pb-10 lg:px-14">
-        {children}
+      <main className="min-w-0 flex-1 bg-canvas px-4 py-6 pb-24 md:px-10 md:py-10 md:pb-10 lg:px-14">
+        <div className="mx-auto max-w-[1440px]">{children}</div>
       </main>
     </div>
   );

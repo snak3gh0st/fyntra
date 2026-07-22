@@ -24,7 +24,7 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-lg border px-5 py-4 ${
+      className={`min-h-[118px] border-0 px-5 py-5 ${
         emphasis ? 'border-gold-pale bg-gold-pale' : 'border-border-steel bg-panel'
       }`}
     >

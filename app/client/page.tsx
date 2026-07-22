@@ -25,7 +25,7 @@ export default async function ClientPortalPage() {
   return (
     <Shell role="CLIENT" userName={session.user.name}>
       <PageHeader title="Minhas apólices" eyebrow="Minha conta" description="Consulte suas apólices, status e documentos em um só lugar." />
-      <div className="mt-8 max-w-2xl">
+      <div className="mt-8 max-w-5xl">
         <EntityCardList>
           {policies.map((policy, i) => (
             <EntityCard key={policy.id} index={i} href={`/client/policies/${policy.id}`}>

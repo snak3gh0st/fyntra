@@ -24,7 +24,7 @@ function Kpi({
 }) {
   return (
     <div
-      className={`min-h-[106px] border-0 px-5 py-4 ${
+      className={`min-h-[118px] border-0 px-5 py-5 ${
         emphasis ? 'bg-gold-pale' : 'bg-panel'
       }`}
     >

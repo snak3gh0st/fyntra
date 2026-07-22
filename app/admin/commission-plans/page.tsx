@@ -15,7 +15,7 @@ export default async function CommissionPlansPage() {
   return (
     <Shell role="ADMIN" userName={session.user.name}>
       <PageHeader title="Planos de comissão" eyebrow="Configuração" description="Defina os percentuais de override aplicados a cada nível da hierarquia." />
-      <div className="mt-8 max-w-2xl">
+      <div className="mt-8 max-w-4xl">
         <EntityCardList>
           {plans.map((plan, i) => (
             <EntityCard key={plan.id} index={i}>
@@ -32,7 +32,7 @@ export default async function CommissionPlansPage() {
         {plans.length === 0 && <EmptyState>Nenhum plano cadastrado ainda.</EmptyState>}
       </div>
 
-      <section className="mt-10 max-w-2xl rounded-lg border border-border-steel bg-panel p-5">
+      <section className="mt-10 max-w-4xl rounded-lg border border-border-steel bg-panel p-5">
         <h2 className="text-lg font-semibold text-ink">Novo plano</h2>
         <p className="mt-1 text-sm text-ink-muted">Adicione uma regra para um rank e nível de downline.</p>
         <div className="mt-5"><NewPlanForm /></div>

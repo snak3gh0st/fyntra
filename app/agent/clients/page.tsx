@@ -23,7 +23,7 @@ export default async function ClientsPage() {
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
       <PageHeader title="Clientes" eyebrow="Carteira" description="Clientes vinculados a você e à sua downline." />
-      <div className="mt-8 max-w-2xl">
+      <div className="mt-8 max-w-4xl">
         <EntityCardList>
           {clients.map((client, i) => (
             <EntityCard key={client.id} index={i}>

@@ -44,7 +44,7 @@ export default async function PoliciesPage() {
       {loadError && (
         <ErrorBanner>Não foi possível carregar suas apólices agora. Tente atualizar a página.</ErrorBanner>
       )}
-      <div className="mt-8 max-w-2xl">
+      <div className="mt-8 max-w-5xl">
         <EntityCardList>
           {policies.map((policy, i) => (
             <EntityCard key={policy.id} index={i} href={`/agent/policies/${policy.id}`}>

@@ -12,7 +12,7 @@ export function PageHeader({
   children?: React.ReactNode
 }) {
   return (
-    <header className="flex flex-col gap-4 border-b border-border-steel pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex flex-col gap-4 border-b border-border-steel pb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal">{eyebrow}</p>}
         <PageTitle className={eyebrow ? 'mt-2' : ''}>{title}</PageTitle>

@@ -2,7 +2,7 @@ import { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 
 export function Table({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border-steel bg-paper">
+    <div className="overflow-x-auto rounded-md border border-border-steel bg-paper">
       <table className="min-w-full border-collapse text-[0.9375rem]">{children}</table>
     </div>
   );
