@@ -88,7 +88,7 @@ export default async function ProductionPage({
         </Table>
         </section>
         <aside className="space-y-5 lg:sticky lg:top-6">
-          <form method="GET" className="rounded-md border border-border-steel bg-panel p-5"><h2 className="text-base font-semibold text-ink">Filtrar período</h2><label className="mt-4 flex flex-col gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Mês</span><Select name="period" defaultValue={period}>{periods.map((p) => <option key={p} value={p}>{p}</option>)}</Select></label><Button type="submit" variant="primary" className="mt-4 w-full">Aplicar filtro</Button></form>
+          <form method="GET" className="rounded-lg border border-border-steel bg-paper p-5"><h2 className="text-base font-semibold text-ink">Filtrar período</h2><p className="mt-1 text-sm text-ink-muted">Escolha o mês que deseja comparar.</p><label className="mt-4 flex flex-col gap-2"><span className="text-xs font-semibold text-ink-muted">Mês</span><Select name="period" defaultValue={period}>{periods.map((p) => <option key={p} value={p}>{p}</option>)}</Select></label><Button type="submit" variant="primary" className="mt-4 w-full">Aplicar filtro</Button></form>
           <ContextPanel eyebrow="Leitura" title="Como usar"><p>O ranking combina apólices criadas, prêmio total e comissão no mês selecionado.</p></ContextPanel>
         </aside>
       </div>

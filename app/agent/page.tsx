@@ -208,7 +208,7 @@ export default async function AgentDashboard() {
         <StatCard label="Tamanho da minha downline" value={downlineIds.length} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
         <BreakdownList
           title="Por status"
           rows={byStatus.map((s) => ({ label: policyStatusLabel[s.status] ?? s.status, count: safeGroupCount(s._count) }))}

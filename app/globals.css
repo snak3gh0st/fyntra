@@ -28,8 +28,10 @@
   --color-rail: oklch(0.23 0.045 200);
   --color-rail-strong: oklch(0.18 0.04 200);
   --color-canvas: oklch(0.965 0.012 200);
+  --color-canvas-deep: oklch(0.945 0.016 200);
+  --color-focus: oklch(0.74 0.08 200 / 0.45);
 
-  --shadow-overlay: 0 8px 24px oklch(0.18 0.012 200 / 0.12);
+  --shadow-overlay: 0 10px 28px oklch(0.18 0.012 200 / 0.14);
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -52,6 +54,7 @@
   --color-rail: var(--color-rail);
   --color-rail-strong: var(--color-rail-strong);
   --color-canvas: var(--color-canvas);
+  --color-canvas-deep: var(--color-canvas-deep);
 
   --font-sans: var(--font-plex-sans), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
@@ -60,15 +63,32 @@
 body {
   background: var(--color-paper);
   color: var(--color-ink);
+  font-size: 0.9375rem;
+  line-height: 1.55;
 }
 
 * { box-sizing: border-box; }
 
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
 
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--color-teal);
   outline-offset: 2px;
+}
+
+button, a, input, select, textarea {
+  transition-timing-function: var(--ease-standard);
+}
+
+::placeholder { color: var(--color-ink-muted); opacity: 0.82; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media (max-width: 767px) {

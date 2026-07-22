@@ -15,7 +15,7 @@ type Result = {
 
 function ImportResultSummary({ result }: { result: Result }) {
   return (
-    <div className="mt-3 rounded-md border border-border-steel px-3 py-2.5 text-sm">
+    <div className="mt-4 rounded-lg border border-border-steel bg-panel/50 px-4 py-3 text-sm">
       <div className="flex items-center gap-2">
         <ImportStatusPill status={result.status} />
         <p className="font-semibold text-ink">
@@ -52,10 +52,10 @@ function ImportCard({
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <section className="rounded-lg border border-border-steel bg-paper p-5">
+    <section className="rounded-lg border border-border-steel bg-paper p-5 transition-colors hover:border-ink-muted">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-base font-semibold text-ink">{title}</h2>
-        <span className="rounded-full bg-teal-pale px-2.5 py-1 text-[11px] font-semibold text-teal">CSV</span>
+        <span className="rounded-md bg-teal-pale px-2 py-1 text-[11px] font-semibold text-teal">CSV</span>
       </div>
       {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
       <form
@@ -67,7 +67,7 @@ function ImportCard({
             setSubmitting(false)
           }
         }}
-        className="mt-3 flex flex-wrap items-center gap-3"
+        className="mt-5 flex flex-wrap items-center gap-3"
       >
         <input
           type="file"

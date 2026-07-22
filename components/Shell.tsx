@@ -7,7 +7,7 @@ import { authClient } from "@/lib/auth-client";
 type NavItem = { href: string; label: string; icon: string };
 
 function NavIcon({ name }: { name: string }) {
-  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
   const paths: Record<string, React.ReactNode> = {
     grid: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
     hierarchy: <><circle cx="12" cy="5" r="2.5" /><circle cx="5" cy="19" r="2.5" /><circle cx="19" cy="19" r="2.5" /><path d="M12 7.5v5M12 12.5H5v4M12 12.5h7v4" /></>,
@@ -79,11 +79,15 @@ export function Shell({
 
   return (
     <div className="min-h-full w-full bg-paper md:flex">
+      <a href="#main-content" className="sr-only fixed left-3 top-3 z-50 rounded-md bg-paper px-3 py-2 text-sm font-semibold text-ink shadow-[var(--shadow-overlay)] focus:not-sr-only">
+        Ir para o conteúdo
+      </a>
       {/* Mobile-only top bar: deliberately far from the bottom nav so a
           distracted, one-handed tap near "Sair" can never land on a nav
           destination instead (or vice versa). */}
-      <div className="flex items-center justify-between bg-rail px-4 py-3 text-paper md:hidden">
+      <div className="flex items-center justify-between border-b border-white/10 bg-rail px-4 py-3 text-paper md:hidden">
         <span className="flex items-center gap-2 font-sans text-base font-semibold tracking-tight"><span className="grid h-7 w-7 place-items-center rounded-md bg-paper text-teal"><span className="text-xs font-bold">F</span></span>Fyntra</span>
+        <span className="mr-auto ml-3 text-xs text-paper/55">{currentPage}</span>
         <button
           type="button"
           onClick={handleSignOut}
@@ -95,13 +99,13 @@ export function Shell({
 
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 flex shrink-0 border-t border-white/10 bg-rail/95 text-paper backdrop-blur-sm md:static md:h-screen md:w-[252px] md:flex-col md:border-t-0 md:border-r-0 md:bg-rail md:backdrop-blur-none"
+        className="fixed inset-x-0 bottom-0 z-30 flex shrink-0 border-t border-white/10 bg-rail text-paper md:static md:h-screen md:w-[248px] md:flex-col md:border-t-0 md:bg-rail"
       >
-        <div className="hidden px-6 pb-7 pt-8 md:block">
+        <div className="hidden px-6 pb-8 pt-8 md:block">
           <span className="flex items-center gap-2.5 font-sans text-lg font-semibold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-md bg-paper text-teal"><span className="text-sm font-bold">F</span></span>Fyntra</span>
-          <p className="mt-3 text-[11px] font-medium uppercase tracking-[0.16em] text-paper/45">Operações RICOS</p>
+          <p className="mt-3 text-xs text-paper/50">Operações RICOS</p>
         </div>
-        <div className="hidden px-6 pb-2 md:block"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-paper/35">{roleLabel}</p></div>
+        <div className="hidden px-6 pb-2 md:block"><p className="text-xs font-semibold text-paper/45">{roleLabel}</p></div>
         <ul className="flex w-full md:flex-1 md:flex-col md:gap-1 md:overflow-y-auto md:px-3">
           {items.map((item) => {
             const active = pathname === item.href;
@@ -110,10 +114,10 @@ export function Shell({
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex flex-1 flex-col items-center gap-1 whitespace-nowrap px-1 py-2.5 text-center text-[10px] font-semibold md:flex-row md:rounded-md md:px-3 md:py-2.5 md:text-left md:text-sm ${
-                    active
-                      ? "bg-paper/10 text-paper"
-                      : "text-paper/55 hover:bg-paper/5 hover:text-paper"
+                    className={`flex flex-1 flex-col items-center gap-1 whitespace-nowrap px-1 py-2.5 text-center text-[10px] font-semibold transition-colors duration-150 md:flex-row md:rounded-md md:px-3 md:py-2.5 md:text-left md:text-sm ${
+                      active
+                      ? "bg-paper/12 text-paper"
+                      : "text-paper/55 hover:bg-paper/7 hover:text-paper"
                   }`}
                 >
                   <NavIcon name={item.icon} />
@@ -124,7 +128,7 @@ export function Shell({
           })}
         </ul>
         <div className="hidden border-t border-white/10 px-6 py-5 md:block">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-paper/45">Conta conectada</p>
+          <p className="text-xs font-semibold text-paper/45">Conta conectada</p>
           <p className="mt-1 truncate text-sm font-medium text-paper">{userName}</p>
           <button
             type="button"
@@ -136,11 +140,11 @@ export function Shell({
         </div>
       </nav>
 
-      <main className="min-w-0 flex-1 bg-canvas px-4 py-6 pb-24 md:px-10 md:py-7 md:pb-10 lg:px-14">
-        <div className="mx-auto max-w-[1440px]">
+      <main id="main-content" className="min-w-0 flex-1 bg-canvas px-4 py-6 pb-24 md:px-9 md:py-8 md:pb-10 lg:px-12">
+        <div className="mx-auto max-w-[1480px]">
           <div className="mb-8 flex items-center justify-between border-b border-border-steel/70 pb-4 text-xs">
             <div className="flex items-center gap-2 text-ink-muted"><span>Fyntra</span><span className="text-ink-muted/40">/</span><span className="font-medium text-ink">{currentPage}</span></div>
-            <span className="flex items-center gap-2 text-ink-muted"><span className="h-1.5 w-1.5 rounded-full bg-success" /> Ambiente operacional</span>
+            <span className="hidden items-center gap-2 text-ink-muted sm:flex"><span className="h-1.5 w-1.5 rounded-full bg-success" /> Operação conectada</span>
           </div>
           {children}
         </div>

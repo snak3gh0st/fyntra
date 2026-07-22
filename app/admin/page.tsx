@@ -8,7 +8,7 @@ import { sumByMonth } from '@/lib/dashboard'
 import { decimalToNumber } from '@/lib/decimal'
 import { diffAuditFields } from '@/lib/audit-diff'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { ImportStatusPill, RolePill } from '@/components/StatusPill'
 
 function Kpi({
@@ -115,16 +115,11 @@ export default async function AdminDashboard() {
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <header className="flex flex-col gap-4 border-b border-border-steel pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal">Visão geral</p>
-          <PageTitle className="mt-2">Painel</PageTitle>
-          <p className="mt-2 max-w-xl text-sm text-ink-muted">Acompanhe a operação, a produção e os itens que precisam de revisão.</p>
-        </div>
-        <Link href="/admin/import" className="inline-flex w-fit items-center gap-2 rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-teal-deep">
+      <PageHeader title="Painel" eyebrow="Visão geral" description="Acompanhe a operação, a produção e os itens que precisam de revisão.">
+        <Link href="/admin/import" className="inline-flex min-h-10 w-fit items-center gap-2 rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-teal-deep active:translate-y-px">
           Importar dados <span aria-hidden>↗</span>
         </Link>
-      </header>
+      </PageHeader>
 
       <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-2 lg:grid-cols-4">
         <Kpi

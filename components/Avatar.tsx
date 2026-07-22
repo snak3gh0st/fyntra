@@ -12,7 +12,8 @@ export function Avatar({ name, rank, size = "md" }: { name: string; rank?: strin
   const dims = size === "sm" ? "h-7 w-7 text-[11px]" : "h-8 w-8 text-xs";
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full font-semibold ${dims} ${
+      aria-label={name}
+      className={`flex shrink-0 items-center justify-center rounded-md font-semibold ${dims} ${
         rank ? (RANK_TONE[rank] ?? "border border-border-steel bg-panel text-ink-muted") : "bg-panel text-ink-muted"
       }`}
     >

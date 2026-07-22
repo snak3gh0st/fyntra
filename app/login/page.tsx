@@ -32,25 +32,25 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen w-full bg-panel md:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
-      <div className="relative hidden overflow-hidden bg-teal p-12 text-paper md:flex md:flex-col md:justify-between lg:p-20">
+    <main className="grid min-h-screen w-full bg-panel md:grid-cols-[minmax(0,1.1fr)_minmax(390px,0.8fr)]">
+      <div className="relative hidden overflow-hidden bg-rail p-12 text-paper md:flex md:flex-col md:justify-between lg:p-20">
         <div className="relative z-10 flex items-center gap-2.5 text-xl font-semibold tracking-tight"><span className="grid h-9 w-9 place-items-center rounded-md bg-paper text-teal"><span className="text-base font-bold">F</span></span>Fyntra</div>
         <div className="relative z-10 max-w-md">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-paper/70">Operações RICOS</p>
-          <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-[-0.03em]">Clareza para cada apólice, comissão e decisão.</h1>
+          <p className="text-sm font-semibold text-paper/65">Operações RICOS</p>
+          <h1 className="mt-5 max-w-lg text-5xl font-semibold leading-[1.05] tracking-[-0.04em]">A operação começa com números confiáveis.</h1>
           <p className="mt-5 max-w-sm text-base leading-7 text-paper/75">Acompanhe o negócio da sua equipe com os números certos, no momento certo.</p>
         </div>
         <p className="relative z-10 text-xs text-paper/60">Fyntra · Finance, Intelligence and Traction</p>
-        <div className="absolute -bottom-32 -right-20 h-96 w-96 rounded-full border-[48px] border-paper/10" />
+        <div className="absolute -bottom-40 -right-20 h-[30rem] w-[30rem] rounded-full border-[52px] border-teal/60" />
         <div className="absolute -right-16 top-20 h-72 w-72 rounded-full border border-paper/10" />
       </div>
-      <div className="flex items-center justify-center px-5 py-12 sm:px-10">
+      <div className="flex items-center justify-center bg-paper px-5 py-12 sm:px-10">
       <div className="w-full max-w-sm">
       <div className="mb-8 md:hidden">
         <span className="flex items-center gap-2 font-sans text-xl font-semibold tracking-tight text-ink"><span className="grid h-8 w-8 place-items-center rounded-md bg-teal text-paper"><span className="text-sm font-bold">F</span></span>Fyntra</span>
       </div>
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal">Área segura</p>
+        <p className="text-xs font-semibold text-teal">Área segura</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-[-0.02em] text-ink">Entrar na sua conta</h1>
         <p className="mt-2 text-sm text-ink-muted">Use seu acesso da RICOS para continuar.</p>
       </div>

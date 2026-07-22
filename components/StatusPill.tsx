@@ -38,10 +38,17 @@ const importStatusLabel: Record<string, string> = {
 };
 
 function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
+  const dotClasses: Record<Tone, string> = {
+    success: "bg-success",
+    warning: "bg-gold-ink",
+    danger: "bg-danger",
+    neutral: "bg-ink-muted",
+  };
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-[3px] text-xs font-semibold tracking-wide ${toneClasses[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-[3px] text-xs font-semibold tracking-wide ${toneClasses[tone]}`}
     >
+      <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${dotClasses[tone]}`} />
       {children}
     </span>
   );
