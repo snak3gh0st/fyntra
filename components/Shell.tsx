@@ -99,7 +99,7 @@ export function Shell({
 
       <nav
         aria-label="Navegação principal"
-        className="fixed inset-x-0 bottom-0 z-30 flex shrink-0 border-t border-white/10 bg-rail text-paper md:static md:h-screen md:w-[248px] md:flex-col md:border-t-0 md:bg-rail"
+        className="fixed inset-x-0 bottom-0 z-30 flex shrink-0 border-t border-white/10 bg-rail text-paper md:sticky md:top-0 md:h-screen md:w-[248px] md:flex-col md:self-start md:border-t-0 md:bg-rail"
       >
         <div className="hidden px-6 pb-8 pt-8 md:block">
           <span className="flex items-center gap-2.5 font-sans text-lg font-semibold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-md bg-paper text-teal"><span className="text-sm font-bold">F</span></span>Fyntra</span>
