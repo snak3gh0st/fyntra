@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { PolicyStatusPill } from '@/components/StatusPill'
@@ -15,11 +15,7 @@ export default async function ClientPortalPage() {
   if (!client) {
     return (
       <Shell role="CLIENT" userName={session.user.name}>
-        <PageTitle>Minhas apólices</PageTitle>
-        <p className="mt-4 text-sm text-ink-muted">
-          Não encontramos uma conta de cliente vinculada a este login. Fale com seu agente para
-          verificar seu cadastro.
-        </p>
+        <PageHeader title="Minhas apólices" eyebrow="Minha conta" description="Não encontramos uma conta de cliente vinculada a este login. Fale com seu agente para verificar seu cadastro." />
       </Shell>
     )
   }
@@ -28,8 +24,8 @@ export default async function ClientPortalPage() {
 
   return (
     <Shell role="CLIENT" userName={session.user.name}>
-      <PageTitle>Minhas apólices</PageTitle>
-      <div className="mt-6 max-w-2xl">
+      <PageHeader title="Minhas apólices" eyebrow="Minha conta" description="Consulte suas apólices, status e documentos em um só lugar." />
+      <div className="mt-8 max-w-2xl">
         <EntityCardList>
           {policies.map((policy, i) => (
             <EntityCard key={policy.id} index={i} href={`/client/policies/${policy.id}`}>

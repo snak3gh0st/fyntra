@@ -7,7 +7,7 @@ import { bucketByMonth } from '@/lib/dashboard'
 import { decimalToNumber } from '@/lib/decimal'
 import { periodFromDate, shiftPeriod, percentChange } from '@/lib/period'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { policyStatusLabel } from '@/components/StatusPill'
 
@@ -187,13 +187,13 @@ export default async function AgentDashboard() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageTitle>Meu painel</PageTitle>
+      <PageHeader title="Meu painel" eyebrow="Visão geral" description="Veja o andamento da sua carteira, comissão e downline." />
       {loadError && (
         <ErrorBanner>
           Não foi possível carregar seus dados agora. Os números abaixo podem estar incompletos — tente atualizar a página.
         </ErrorBanner>
       )}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Comissão este mês"
           value={`$${commissionThisMonth.toFixed(2)}`}
@@ -205,7 +205,7 @@ export default async function AgentDashboard() {
         <StatCard label="Tamanho da minha downline" value={downlineIds.length} />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <BreakdownList
           title="Por status"
           rows={byStatus.map((s) => ({ label: policyStatusLabel[s.status] ?? s.status, count: safeGroupCount(s._count) }))}
@@ -220,7 +220,7 @@ export default async function AgentDashboard() {
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-8">
         <MonthlyChart buckets={monthlyBuckets} />
       </div>
     </Shell>

@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { buildHierarchyOrder } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { HierarchyBoard } from './HierarchyBoard'
 
 export const dynamic = 'force-dynamic'
@@ -20,11 +20,8 @@ export default async function AgentsPage() {
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <PageTitle>Agentes e hierarquia</PageTitle>
-      <p className="mt-1 text-sm text-ink-muted">
-        Arraste um agente sobre outro para reatribuir o gerente, ou use &quot;Editar&quot; para ajustar rank e gerente diretamente.
-      </p>
-      <div className="mt-6 max-w-3xl">
+      <PageHeader title="Agentes e hierarquia" eyebrow="Estrutura" description={'Arraste um agente sobre outro para reatribuir o gerente, ou use "Editar" para ajustar rank e gerente diretamente.'} />
+      <div className="mt-8 max-w-3xl">
         <HierarchyBoard agents={ordered} />
       </div>
     </Shell>

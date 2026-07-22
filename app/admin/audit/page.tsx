@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { diffAuditFields } from '@/lib/audit-diff'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { Table, Thead, Th, Tr, Td, EmptyState } from '@/components/Table'
 import { RolePill } from '@/components/StatusPill'
 
@@ -23,11 +23,8 @@ export default async function AuditPage() {
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <PageTitle>Auditoria</PageTitle>
-      <p className="mt-1 text-sm text-ink-muted">
-        Últimas 100 alterações de hierarquia e planos de comissão, com o valor antes e depois de cada mudança.
-      </p>
-      <div className="mt-6">
+      <PageHeader title="Auditoria" eyebrow="Controle" description="Últimas 100 alterações de hierarquia e planos de comissão, com o valor antes e depois de cada mudança." />
+      <div className="mt-8">
         <Table>
           <Thead>
             <tr>

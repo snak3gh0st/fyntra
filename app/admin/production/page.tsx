@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/require-role'
 import { getMonthBounds, buildProductionRanking } from '@/lib/agent-production'
 import { periodFromDate } from '@/lib/period'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { Table, Thead, Th, Tr, Td, TdNum } from '@/components/Table'
 import { Select } from '@/components/Field'
 import { Button } from '@/components/Button'
@@ -60,9 +60,9 @@ export default async function ProductionPage({
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <PageTitle>Produção por agente</PageTitle>
+      <PageHeader title="Produção por agente" eyebrow="Desempenho" description="Compare apólices, prêmio e comissão por período." />
 
-      <form method="GET" className="mt-4 flex items-center gap-2">
+      <form method="GET" className="mt-8 flex flex-wrap items-end gap-2 rounded-lg border border-border-steel bg-panel p-4">
         <Select name="period" defaultValue={period}>
           {periods.map((p) => (
             <option key={p} value={p}>

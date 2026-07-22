@@ -42,32 +42,38 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
       <Link href="/agent/policies" className="text-sm font-semibold text-teal hover:text-teal-deep">
         ← Voltar
       </Link>
-      <PageTitle className="mt-2">Apólice {policy.policyNumber}</PageTitle>
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div>
+      <div className="mt-3 border-b border-border-steel pb-6">
+        <PageTitle>Apólice {policy.policyNumber}</PageTitle>
+        <p className="mt-2 text-sm text-ink-muted">Detalhes da apólice e comissões geradas.</p>
+      </div>
+      <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-4">
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Carrier</p>
           <p className="text-sm text-ink">{policy.carrier}</p>
         </div>
-        <div>
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Produto</p>
           <p className="text-sm text-ink">{policy.product}</p>
         </div>
-        <div>
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Prêmio</p>
           <p className="font-mono text-sm text-ink">${policy.premium.toString()}</p>
         </div>
-        <div>
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Status</p>
           <PolicyStatusPill status={policy.status} />
         </div>
       </div>
 
-      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Cliente</h2>
-      <p className="text-sm text-ink">
+      <section className="mt-10 rounded-lg border border-border-steel bg-paper p-5">
+      <h2 className="text-base font-semibold text-ink">Cliente</h2>
+      <p className="mt-2 text-sm text-ink">
         {policy.client.name} {policy.client.email ? `· ${policy.client.email}` : ''}
       </p>
 
-      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Comissão gerada por esta apólice</h2>
+      </section>
+      <section className="mt-10">
+      <h2 className="mb-3 text-base font-semibold text-ink">Comissão gerada por esta apólice</h2>
       <Table>
         <Thead>
           <tr>
@@ -91,8 +97,10 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
         </tbody>
       </Table>
       {policy.commissionRecords.length === 0 && <EmptyState>Nenhuma comissão registrada ainda.</EmptyState>}
+      </section>
 
-      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Documentos</h2>
+      <section className="mt-10">
+      <h2 className="mb-3 text-base font-semibold text-ink">Documentos</h2>
       <ul className="divide-y divide-border-steel rounded-lg border border-border-steel bg-panel">
         {policy.documents.map((doc) => (
           <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
@@ -105,7 +113,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
       </ul>
       {policy.documents.length === 0 && <EmptyState>Nenhum documento ainda.</EmptyState>}
 
-      <form action={uploadPolicyDocument} className="mt-4 flex items-center gap-3">
+      <form action={uploadPolicyDocument} className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-border-steel p-4">
         <input type="hidden" name="policyId" value={policy.id} />
         <input
           type="file"
@@ -118,6 +126,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
           Enviar documento
         </Button>
       </form>
+      </section>
     </Shell>
   )
 }

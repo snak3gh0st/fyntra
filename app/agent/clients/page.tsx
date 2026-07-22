@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { Avatar } from '@/components/Avatar'
@@ -22,8 +22,8 @@ export default async function ClientsPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageTitle>Clientes</PageTitle>
-      <div className="mt-6 max-w-2xl">
+      <PageHeader title="Clientes" eyebrow="Carteira" description="Clientes vinculados a você e à sua downline." />
+      <div className="mt-8 max-w-2xl">
         <EntityCardList>
           {clients.map((client, i) => (
             <EntityCard key={client.id} index={i}>

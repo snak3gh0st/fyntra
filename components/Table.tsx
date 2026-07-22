@@ -2,7 +2,7 @@ import { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 
 export function Table({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border-steel">
+    <div className="overflow-x-auto rounded-lg border border-border-steel bg-paper">
       <table className="min-w-full border-collapse text-[0.9375rem]">{children}</table>
     </div>
   );
@@ -18,7 +18,7 @@ export function Th({
 }: ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
-      className={`whitespace-nowrap border-b border-border-steel px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted ${className}`}
+      className={`whitespace-nowrap border-b border-border-steel px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted ${className}`}
       {...props}
     />
   );
@@ -39,7 +39,7 @@ export function Td({
 }: TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
-      className={`whitespace-nowrap border-b border-border-steel px-3 py-2.5 text-ink last:border-b-0 ${className}`}
+      className={`whitespace-nowrap border-b border-border-steel px-4 py-3 text-ink last:border-b-0 ${className}`}
       {...props}
     />
   );
@@ -59,7 +59,7 @@ export function TdNum({
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="px-3 py-10 text-center text-sm text-ink-muted">
+    <div className="rounded-lg border border-dashed border-border-steel bg-panel/40 px-4 py-10 text-center text-sm text-ink-muted">
       {children}
     </div>
   );

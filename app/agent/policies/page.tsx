@@ -3,7 +3,7 @@ import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { decimalToNumber } from '@/lib/decimal'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
@@ -40,11 +40,11 @@ export default async function PoliciesPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageTitle>Apólices</PageTitle>
+      <PageHeader title="Apólices" eyebrow="Carteira" description="Consulte o status, prêmio e detalhes das apólices da sua operação." />
       {loadError && (
         <ErrorBanner>Não foi possível carregar suas apólices agora. Tente atualizar a página.</ErrorBanner>
       )}
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-8 max-w-2xl">
         <EntityCardList>
           {policies.map((policy, i) => (
             <EntityCard key={policy.id} index={i} href={`/agent/policies/${policy.id}`}>

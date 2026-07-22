@@ -52,8 +52,11 @@ function ImportCard({
   const [submitting, setSubmitting] = useState(false)
 
   return (
-    <section className="rounded-lg border border-border-steel bg-panel p-5">
-      <h2 className="text-lg font-semibold text-ink">{title}</h2>
+    <section className="rounded-lg border border-border-steel bg-paper p-5">
+      <div className="flex items-start justify-between gap-4">
+        <h2 className="text-base font-semibold text-ink">{title}</h2>
+        <span className="rounded-full bg-teal-pale px-2.5 py-1 text-[11px] font-semibold text-teal">CSV</span>
+      </div>
       {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
       <form
         action={async (formData: FormData) => {
@@ -84,7 +87,7 @@ function ImportCard({
 
 export function ImportForms() {
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="grid gap-5 lg:grid-cols-2">
       <ImportCard
         title="1. Apólices (CSV)"
         action={submitPolicyImport}

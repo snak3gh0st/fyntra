@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineWithLevels, getUplineIds } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { HierarchyList } from './HierarchyLists'
 
 export default async function HierarchyPage() {
@@ -21,14 +21,14 @@ export default async function HierarchyPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageTitle>Minha hierarquia</PageTitle>
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        <section>
-          <h2 className="mb-2 text-sm font-semibold text-ink">Acima de mim</h2>
+      <PageHeader title="Minha hierarquia" eyebrow="Estrutura" description="Veja quem está acima de você e acompanhe os agentes da sua downline." />
+      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
+        <section className="rounded-lg border border-border-steel bg-paper p-5">
+          <h2 className="mb-4 text-sm font-semibold text-ink">Acima de mim</h2>
           <HierarchyList rows={uplineRows} />
         </section>
-        <section>
-          <h2 className="mb-2 text-sm font-semibold text-ink">Abaixo de mim</h2>
+        <section className="rounded-lg border border-border-steel bg-paper p-5">
+          <h2 className="mb-4 text-sm font-semibold text-ink">Abaixo de mim</h2>
           <HierarchyList rows={downlineRows} />
         </section>
       </div>

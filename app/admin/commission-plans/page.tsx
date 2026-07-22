@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/require-role'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
 import { NewPlanForm } from './NewPlanForm'
@@ -14,8 +14,8 @@ export default async function CommissionPlansPage() {
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <PageTitle>Planos de comissão</PageTitle>
-      <div className="mt-6 max-w-2xl">
+      <PageHeader title="Planos de comissão" eyebrow="Configuração" description="Defina os percentuais de override aplicados a cada nível da hierarquia." />
+      <div className="mt-8 max-w-2xl">
         <EntityCardList>
           {plans.map((plan, i) => (
             <EntityCard key={plan.id} index={i}>
@@ -32,8 +32,11 @@ export default async function CommissionPlansPage() {
         {plans.length === 0 && <EmptyState>Nenhum plano cadastrado ainda.</EmptyState>}
       </div>
 
-      <h2 className="mt-8 mb-3 text-lg font-semibold text-ink">Novo plano</h2>
-      <NewPlanForm />
+      <section className="mt-10 max-w-2xl rounded-lg border border-border-steel bg-panel p-5">
+        <h2 className="text-lg font-semibold text-ink">Novo plano</h2>
+        <p className="mt-1 text-sm text-ink-muted">Adicione uma regra para um rank e nível de downline.</p>
+        <div className="mt-5"><NewPlanForm /></div>
+      </section>
     </Shell>
   )
 }

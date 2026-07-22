@@ -33,27 +33,31 @@ export default async function ClientPolicyDetailPage({ params }: { params: Promi
       <Link href="/client" className="text-sm font-semibold text-teal hover:text-teal-deep">
         ← Voltar
       </Link>
-      <PageTitle className="mt-2">Apólice {policy.policyNumber}</PageTitle>
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div>
+      <div className="mt-3 border-b border-border-steel pb-6">
+        <PageTitle>Apólice {policy.policyNumber}</PageTitle>
+        <p className="mt-2 text-sm text-ink-muted">Resumo da sua cobertura e documentos disponíveis.</p>
+      </div>
+      <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-4">
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Seguradora</p>
           <p className="text-sm text-ink">{policy.carrier}</p>
         </div>
-        <div>
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Produto</p>
           <p className="text-sm text-ink">{policy.product}</p>
         </div>
-        <div>
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Prêmio</p>
           <p className="font-mono text-sm text-ink">${policy.premium.toString()}</p>
         </div>
-        <div>
+        <div className="bg-panel px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Status</p>
           <PolicyStatusPill status={policy.status} />
         </div>
       </div>
 
-      <h2 className="mt-8 mb-2 text-lg font-semibold text-ink">Documentos</h2>
+      <section className="mt-10">
+      <h2 className="mb-3 text-base font-semibold text-ink">Documentos</h2>
       <ul className="divide-y divide-border-steel rounded-lg border border-border-steel bg-panel">
         {policy.documents.map((doc) => (
           <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
@@ -65,6 +69,7 @@ export default async function ClientPolicyDetailPage({ params }: { params: Promi
         ))}
       </ul>
       {policy.documents.length === 0 && <EmptyState>Nenhum documento ainda.</EmptyState>}
+      </section>
     </Shell>
   )
 }

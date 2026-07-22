@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { decimalToNumber } from '@/lib/decimal'
 import { Shell } from '@/components/Shell'
-import { PageTitle } from '@/components/PageTitle'
+import { PageHeader } from '@/components/PageHeader'
 import { ErrorBanner } from '@/components/ErrorBanner'
 import { EmptyState } from '@/components/Table'
 import { EntityCard, EntityCardList } from '@/components/EntityCard'
@@ -45,17 +45,13 @@ export default async function CommissionsPage() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageTitle>Extrato de comissões</PageTitle>
+      <PageHeader title="Extrato de comissões" eyebrow="Financeiro" description="Nível 0 é sua venda direta. Nível 1+ é repasse de uma venda da sua downline. A origem mostra quem vendeu a apólice." />
       {loadError && (
         <ErrorBanner>
           Não foi possível carregar seu extrato agora. Tente atualizar a página.
         </ErrorBanner>
       )}
-      <p className="mt-2 text-sm text-ink-muted">
-        Nível 0 é sua venda direta. Nível 1+ é repasse (override) de uma venda da sua downline —
-        &quot;Origem&quot; mostra qual agente vendeu a apólice.
-      </p>
-      <div className="mt-4 max-w-2xl">
+      <div className="mt-8 max-w-2xl">
         {byPeriod.map(({ period, rows, subtotal }) => (
           <div key={period} className="mb-6">
             <div className="mb-2 flex items-baseline justify-between">

@@ -83,7 +83,7 @@ function AgentCard({
             ? "border-teal ring-2 ring-teal-pale"
             : dragState === "invalid-target"
               ? "border-danger ring-2 ring-danger-pale"
-              : "border-border-steel hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(24,34,37,0.08)]"
+              : "border-border-steel hover:border-teal"
         }`}
       >
         <span aria-hidden className="select-none text-ink-muted/40">

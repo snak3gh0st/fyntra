@@ -13,7 +13,7 @@ function PersonCard({ row, index, reducedMotion }: { row: Row; index: number; re
       animate={{ opacity: 1, y: 0 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.25, delay: index * 0.03, ease: "easeOut" }}
       style={row.level ? { marginLeft: `${Math.min(row.level - 1, 6) * 1.25}rem` } : undefined}
-      className="flex items-center gap-3 rounded-lg border border-border-steel bg-paper px-4 py-2.5 transition-[box-shadow,transform] duration-150 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(24,34,37,0.08)]"
+      className="flex items-center gap-3 rounded-lg border border-border-steel bg-paper px-4 py-3 transition-colors duration-150 hover:border-teal"
     >
       {row.level !== undefined && row.level > 1 && <span className="text-ink-muted">└</span>}
       <Avatar name={row.name} rank={row.rank} size="sm" />
