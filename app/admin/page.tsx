@@ -24,8 +24,8 @@ function Kpi({
 }) {
   return (
     <div
-      className={`rounded-lg border px-5 py-4 ${
-        emphasis ? 'border-gold-pale bg-gold-pale' : 'border-border-steel bg-panel'
+      className={`min-h-[106px] border-0 px-5 py-4 ${
+        emphasis ? 'bg-gold-pale' : 'bg-panel'
       }`}
     >
       <p className={`text-xs font-semibold uppercase tracking-wide ${emphasis ? 'text-gold-ink' : 'text-ink-muted'}`}>
@@ -113,9 +113,18 @@ export default async function AdminDashboard() {
 
   return (
     <Shell role="ADMIN" userName={session.user.name}>
-      <PageTitle>Painel</PageTitle>
+      <header className="flex flex-col gap-4 border-b border-border-steel pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal">Visão geral</p>
+          <PageTitle className="mt-2">Painel</PageTitle>
+          <p className="mt-2 max-w-xl text-sm text-ink-muted">Acompanhe a operação, a produção e os itens que precisam de revisão.</p>
+        </div>
+        <Link href="/admin/import" className="inline-flex w-fit items-center gap-2 rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-teal-deep">
+          Importar dados <span aria-hidden>↗</span>
+        </Link>
+      </header>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-2 lg:grid-cols-4">
         <Kpi
           label="Comissão paga (este mês)"
           value={`$${commissionCurrent.toFixed(2)}`}
@@ -127,22 +136,25 @@ export default async function AdminDashboard() {
         <Kpi label="Agentes ativos" value={agentsActive} />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-8">
         <PremiumChart buckets={premiumBuckets} />
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-lg border border-border-steel bg-panel px-5 py-4">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <section className="rounded-lg border border-border-steel bg-paper">
+          <div className="border-b border-border-steel px-5 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink">Precisa de atenção</h2>
             <Link href="/admin/import" className="text-xs font-semibold text-teal hover:text-teal-deep">
-              Importar dados →
+              Ver imports →
             </Link>
           </div>
+          </div>
+          <div className="px-5 py-4">
           {importsNeedingAttention.length === 0 ? (
-            <p className="mt-3 text-sm text-ink-muted">Nenhum import pendente de revisão.</p>
+            <p className="text-sm text-ink-muted">Nenhum import pendente de revisão.</p>
           ) : (
-            <ul className="mt-3 flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2.5">
               {importsNeedingAttention.map((batch) => (
                 <li key={batch.id} className="flex items-center justify-between gap-2 text-sm">
                   <span className="truncate text-ink">{batch.filename}</span>
@@ -151,19 +163,23 @@ export default async function AdminDashboard() {
               ))}
             </ul>
           )}
+          </div>
         </section>
 
-        <section className="rounded-lg border border-border-steel bg-panel px-5 py-4">
+        <section className="rounded-lg border border-border-steel bg-paper">
+          <div className="border-b border-border-steel px-5 py-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink">Atividade recente</h2>
             <Link href="/admin/audit" className="text-xs font-semibold text-teal hover:text-teal-deep">
               Ver tudo →
             </Link>
           </div>
+          </div>
+          <div className="px-5 py-4">
           {recentAudit.length === 0 ? (
-            <p className="mt-3 text-sm text-ink-muted">Nenhuma alteração registrada ainda.</p>
+            <p className="text-sm text-ink-muted">Nenhuma alteração registrada ainda.</p>
           ) : (
-            <ul className="mt-3 flex flex-col gap-2.5">
+            <ul className="flex flex-col gap-2.5">
               {recentAudit.map((log) => {
                 const diffs = diffAuditFields(log.before, log.after)
                 const summary = diffs[0] ? `${diffs[0].field}: ${diffs[0].before} → ${diffs[0].after}` : log.action
@@ -178,6 +194,7 @@ export default async function AdminDashboard() {
               })}
             </ul>
           )}
+          </div>
         </section>
       </div>
     </Shell>
