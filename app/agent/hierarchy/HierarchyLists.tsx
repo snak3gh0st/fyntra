@@ -12,8 +12,8 @@ function PersonCard({ row, index, reducedMotion }: { row: Row; index: number; re
       initial={reducedMotion ? false : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.25, delay: index * 0.03, ease: "easeOut" }}
-      style={row.level ? { marginLeft: `${Math.min(row.level - 1, 6) * 1.25}rem` } : undefined}
-      className="flex items-center gap-3 rounded-lg border border-border-steel bg-paper px-4 py-3 transition-colors duration-150 hover:border-teal"
+      style={row.level ? { marginLeft: `${Math.min(row.level - 1, 4) * 1.25}rem` } : undefined}
+      className="flex items-center gap-3 bg-paper px-3 py-3 transition-colors duration-150 hover:bg-teal-pale"
     >
       {row.level !== undefined && row.level > 1 && <span className="text-ink-muted">└</span>}
       <Avatar name={row.name} rank={row.rank} size="sm" />
@@ -35,9 +35,11 @@ export function HierarchyList({ rows }: { rows: Row[] }) {
     return <EmptyState>Ninguém aqui.</EmptyState>;
   }
   return (
-    <div className="flex flex-col gap-2">
+    <div className="overflow-hidden rounded-md border border-border-steel bg-paper divide-y divide-border-steel">
       {rows.map((row, i) => (
-        <PersonCard key={`${row.name}-${i}`} row={row} index={i} reducedMotion={reducedMotion} />
+        <div key={`${row.name}-${i}`}>
+          <PersonCard row={row} index={i} reducedMotion={reducedMotion} />
+        </div>
       ))}
     </div>
   );

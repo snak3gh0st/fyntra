@@ -23,17 +23,16 @@ export default async function HierarchyPage() {
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
       <PageHeader title="Minha hierarquia" eyebrow="Estrutura" description="Veja quem está acima de você e acompanhe os agentes da sua downline." />
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <section className="rounded-lg border border-border-steel bg-paper p-5">
-          <h2 className="mb-4 text-sm font-semibold text-ink">Acima de mim</h2>
-          <HierarchyList rows={uplineRows} />
-        </section>
-        <section className="rounded-lg border border-border-steel bg-paper p-5">
-          <h2 className="mb-4 text-sm font-semibold text-ink">Abaixo de mim</h2>
+      <div className="mt-8 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(240px,280px)]">
+        <section className="min-w-0 rounded-md border border-border-steel bg-paper p-5">
+          <div className="mb-6 flex items-baseline justify-between gap-3"><div><h2 className="text-sm font-semibold text-ink">Acima de mim</h2><p className="mt-1 text-xs text-ink-muted">Sua linha de liderança</p></div><span className="font-mono text-xs text-ink-muted">{uplineRows.length}</span></div>
+          {uplineRows.length === 0 ? <p className="border-b border-border-steel pb-5 text-sm text-ink-muted">Você está no topo da sua linha.</p> : <HierarchyList rows={uplineRows} />}
+          <div className="mb-6 mt-8 flex items-baseline justify-between gap-3"><div><h2 className="text-sm font-semibold text-ink">Abaixo de mim</h2><p className="mt-1 text-xs text-ink-muted">Sua downline por nível</p></div><span className="font-mono text-xs text-ink-muted">{downlineRows.length}</span></div>
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <span className="text-xs text-ink-muted">Agentes organizados pela profundidade da estrutura</span>
+          </div>
           <HierarchyList rows={downlineRows} />
         </section>
-        </div>
         <ContextPanel eyebrow="Sua posição" title="Como ler a hierarquia">
           <p>Acima de você estão os responsáveis pela sua linha. Abaixo estão os agentes que fazem parte da sua downline.</p>
           <div className="mt-5 border-t border-white/10 pt-4">
