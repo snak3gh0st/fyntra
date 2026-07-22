@@ -56,9 +56,10 @@ export default async function ClientPolicyDetailPage({ params }: { params: Promi
         </div>
       </div>
 
-      <section className="mt-10">
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <section>
       <h2 className="mb-3 text-base font-semibold text-ink">Documentos</h2>
-      <ul className="divide-y divide-border-steel rounded-lg border border-border-steel bg-panel">
+      <ul className="divide-y divide-border-steel rounded-md border border-border-steel bg-panel">
         {policy.documents.map((doc) => (
           <li key={doc.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
             <a href={`/api/documents/${doc.id}`} target="_blank" className="text-teal hover:text-teal-deep">
@@ -70,6 +71,8 @@ export default async function ClientPolicyDetailPage({ params }: { params: Promi
       </ul>
       {policy.documents.length === 0 && <EmptyState>Nenhum documento ainda.</EmptyState>}
       </section>
+      <aside className="rounded-md border border-border-steel bg-rail p-5 text-paper"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-paper/45">Sua cobertura</p><h2 className="mt-2 text-base font-semibold">Informações principais</h2><p className="mt-4 text-sm leading-6 text-paper/65">Use os dados acima para confirmar a seguradora, o produto, o prêmio e o status atual da apólice.</p></aside>
+      </div>
     </Shell>
   )
 }

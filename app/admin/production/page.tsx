@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Table, Thead, Th, Tr, Td, TdNum } from '@/components/Table'
 import { Select } from '@/components/Field'
 import { Button } from '@/components/Button'
+import { ContextPanel } from '@/components/ContextPanel'
 
 export default async function ProductionPage({
   searchParams,
@@ -62,20 +63,9 @@ export default async function ProductionPage({
     <Shell role="ADMIN" userName={session.user.name}>
       <PageHeader title="Produção por agente" eyebrow="Desempenho" description="Compare apólices, prêmio e comissão por período." />
 
-      <form method="GET" className="mt-8 flex flex-wrap items-end gap-2 rounded-lg border border-border-steel bg-panel p-4">
-        <Select name="period" defaultValue={period}>
-          {periods.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </Select>
-        <Button type="submit" variant="secondary">
-          Aplicar
-        </Button>
-      </form>
-
-      <div className="mt-6">
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <section>
+          <div className="mb-4 flex items-baseline justify-between"><h2 className="text-base font-semibold text-ink">Ranking do período</h2><span className="text-xs text-ink-muted">{rows.length} agentes</span></div>
         <Table>
           <Thead>
             <tr>
@@ -96,6 +86,11 @@ export default async function ProductionPage({
             ))}
           </tbody>
         </Table>
+        </section>
+        <aside className="space-y-5 lg:sticky lg:top-6">
+          <form method="GET" className="rounded-md border border-border-steel bg-panel p-5"><h2 className="text-base font-semibold text-ink">Filtrar período</h2><label className="mt-4 flex flex-col gap-2"><span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Mês</span><Select name="period" defaultValue={period}>{periods.map((p) => <option key={p} value={p}>{p}</option>)}</Select></label><Button type="submit" variant="primary" className="mt-4 w-full">Aplicar filtro</Button></form>
+          <ContextPanel eyebrow="Leitura" title="Como usar"><p>O ranking combina apólices criadas, prêmio total e comissão no mês selecionado.</p></ContextPanel>
+        </aside>
       </div>
     </Shell>
   )
