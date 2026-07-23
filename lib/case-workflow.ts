@@ -50,6 +50,10 @@ export function canTransitionCase(from: CaseStage, to: CaseStage): boolean {
   return transitions[from].includes(to)
 }
 
+export function allowedTransitions(from: CaseStage): CaseStage[] {
+  return transitions[from]
+}
+
 export function canCreatePolicyFromOrigin(
   caseStage?: CaseStage | null,
   isHistoricalImport = false,

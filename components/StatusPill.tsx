@@ -1,3 +1,5 @@
+import { caseStageLabel } from "@/lib/case-workflow";
+
 type Tone = "success" | "warning" | "danger" | "neutral";
 
 const toneClasses: Record<Tone, string> = {
@@ -66,6 +68,22 @@ export function ImportStatusPill({ status }: { status: string }) {
   return (
     <Pill tone={importStatusTone[status] ?? "neutral"}>
       {importStatusLabel[status] ?? status}
+    </Pill>
+  );
+}
+
+const caseStageTone: Record<string, Tone> = {
+  APPROVED: "success",
+  ISSUED: "success",
+  PLACED: "success",
+  DECLINED: "danger",
+  WITHDRAWN: "neutral",
+};
+
+export function CaseStagePill({ stage }: { stage: string }) {
+  return (
+    <Pill tone={caseStageTone[stage] ?? "warning"}>
+      {caseStageLabel[stage as keyof typeof caseStageLabel] ?? stage}
     </Pill>
   );
 }
