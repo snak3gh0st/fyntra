@@ -13,12 +13,13 @@ MVP em produção, evoluindo por incremento. Entregue até agora:
 - Detalhe de apólice com documentos (upload/download com controle de acesso)
 - Dashboard de carteira do agente (composição por status/carrier/produto, evolução mensal)
 - Alertas de risco (apólices paradas no funil, sem sinal de pagamento, ou que lapsaram recentemente)
+- **Distribution Core (Release 1):** fluxo de vendas por caso (prospect → caso → apólice emitida/importada), com etapas legais, requirements, timeline, snapshots de apólice e ledger imutável de comissões. Apólices deixam de ser criadas manualmente — surgem da emissão de um caso ou de importação de histórico. Ver `docs/operations/distribution-core-rollout.md`.
 
 Specs e planos de cada entrega ficam em `docs/superpowers/specs/` e `docs/superpowers/plans/`.
 
 ## Portais
 
-- **Portal do Agente** (`/agent`): dashboard com KPIs, composição da carteira, gráfico mensal e alertas de risco; clientes, apólices, comissões (diretas + override), hierarquia da downline.
+- **Portal do Agente** (`/agent`): fila de trabalho "Hoje" (casos ativos, aguardando ilustração, requirements abertos, apólices em risco, comissões esperadas/pagas/chargeback); casos (`/agent/cases`), clientes, apólices, comissões (diretas + override), equipe/downline. Indicadores de carteira ficam abaixo da fila.
 - **Portal do Cliente** (`/client`): apólices próprias (somente leitura), documentos.
 - **Admin** (`/admin`): import de CSV (apólices/comissões), configuração de planos de comissão, gestão de agentes/hierarquia.
 
