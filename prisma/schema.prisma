@@ -48,6 +48,71 @@ enum ImportStatus {
   FAILED
 }
 
+enum CaseStage {
+  LEAD
+  DISCOVERY
+  DESIGN
+  ILLUSTRATION_READY
+  APPLICATION_STARTED
+  SUBMITTED
+  UNDERWRITING
+  APPROVED
+  ISSUED
+  PLACED
+  DECLINED
+  WITHDRAWN
+}
+
+enum CaseStatus {
+  OPEN
+  CLOSED
+}
+
+enum IllustrationKind {
+  PRELIMINARY
+  OFFICIAL
+}
+
+enum ApplicationStatus {
+  DRAFT
+  STARTED
+  SUBMITTED
+  UNDERWRITING
+  APPROVED
+  ISSUED
+  DECLINED
+  WITHDRAWN
+}
+
+enum RequirementStatus {
+  OPEN
+  RECEIVED
+  WAIVED
+}
+
+enum PolicyTransactionType {
+  PREMIUM
+  CHARGE
+  LOAN
+  WITHDRAWAL
+  ADJUSTMENT
+}
+
+enum CommissionTransactionType {
+  EXPECTED
+  PAID
+  CHARGEBACK
+  ADJUSTMENT
+}
+
+enum SyncStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  NEEDS_REVIEW
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -84,6 +149,9 @@ model Agent {
   clients           Client[]
   policies          Policy[]
   commissionRecords CommissionRecord[]
+  prospects         Prospect[]
+  insuranceCases    InsuranceCase[]
+  commissionTransactions CommissionTransaction[]
 
   @@index([parentAgentId])
 }
@@ -100,6 +168,7 @@ model Client {
   createdAt       DateTime @default(now())
 
   policies Policy[]
+  insuranceCases InsuranceCase[]
 
   @@index([assignedAgentId])
 }
@@ -121,13 +190,258 @@ model Policy {
   statusChangedAt DateTime?
   importBatchId String?
   importBatch   ImportBatch? @relation(fields: [importBatchId], references: [id])
+  caseId        String?
+  case          InsuranceCase? @relation(fields: [caseId], references: [id])
+  sourceProvider String?
+  sourceExternalId String?
   createdAt     DateTime     @default(now())
 
   commissionRecords CommissionRecord[]
   documents         PolicyDocument[]
+  snapshots         PolicySnapshot[]
+  transactions      PolicyTransaction[]
+  commissionTransactions CommissionTransaction[]
 
   @@index([agentId])
   @@index([clientId])
+  @@index([caseId])
+  @@unique([sourceProvider, sourceExternalId])
+}
+
+model Prospect {
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  dateOfBirth     DateTime?
+  state           String?
+  tobaccoStatus   String?
+  assignedAgentId String
+  assignedAgent   Agent    @relation(fields: [assignedAgentId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  cases           InsuranceCase[]
+
+  @@index([assignedAgentId])
+}
+
+model InsuranceCase {
+  id              String      @id @default(cuid())
+  prospectId      String
+  prospect        Prospect    @relation(fields: [prospectId], references: [id])
+  assignedAgentId String
+  assignedAgent   Agent       @relation(fields: [assignedAgentId], references: [id])
+  clientId        String?
+  client          Client?     @relation(fields: [clientId], references: [id])
+  stage           CaseStage   @default(LEAD)
+  status          CaseStatus  @default(OPEN)
+  objective       String?
+  targetCoverage  Decimal?
+  monthlyBudget   Decimal?
+  carrier         String?
+  productType     String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  illustrations   Illustration[]
+  applications    Application[]
+  timelineEvents  CaseTimelineEvent[]
+  policies        Policy[]
+
+  @@index([assignedAgentId, stage])
+  @@index([prospectId])
+  @@index([clientId])
+}
+
+model Illustration {
+  id              String           @id @default(cuid())
+  caseId          String
+  insuranceCase   InsuranceCase    @relation(fields: [caseId], references: [id])
+  kind            IllustrationKind
+  provider        String?
+  externalId      String?
+  sourceUpdatedAt DateTime?
+  productName     String?
+  faceAmount      Decimal?
+  premium         Decimal?
+  documentUrl     String?
+  rawPayload      Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  scenarios       IllustrationScenario[]
+
+  @@index([caseId])
+  @@unique([provider, externalId])
+}
+
+model IllustrationScenario {
+  id             String       @id @default(cuid())
+  illustrationId String
+  illustration   Illustration @relation(fields: [illustrationId], references: [id])
+  name           String
+  assumptions    Json?
+  summary        Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([illustrationId])
+}
+
+model Application {
+  id              String            @id @default(cuid())
+  caseId          String
+  insuranceCase   InsuranceCase     @relation(fields: [caseId], references: [id])
+  status          ApplicationStatus @default(DRAFT)
+  provider        String?
+  externalId      String?
+  sourceUpdatedAt DateTime?
+  submittedAt     DateTime?
+  rawPayload      Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  requirements    ApplicationRequirement[]
+
+  @@index([caseId])
+  @@unique([provider, externalId])
+}
+
+model ApplicationRequirement {
+  id              String            @id @default(cuid())
+  applicationId   String
+  application     Application       @relation(fields: [applicationId], references: [id])
+  status          RequirementStatus @default(OPEN)
+  title           String
+  description     String?
+  dueAt           DateTime?
+  receivedAt      DateTime?
+  provider        String?
+  externalId      String?
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([applicationId, status])
+  @@unique([provider, externalId])
+}
+
+model CaseTimelineEvent {
+  id        String        @id @default(cuid())
+  caseId    String
+  insuranceCase InsuranceCase @relation(fields: [caseId], references: [id])
+  type      String
+  title     String
+  body      String?
+  metadata  Json?
+  createdAt DateTime      @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+model PolicySnapshot {
+  id              String   @id @default(cuid())
+  policyId        String
+  policy          Policy   @relation(fields: [policyId], references: [id])
+  status          PolicyStatus
+  faceAmount      Decimal?
+  plannedPremium  Decimal?
+  lastPaymentDate DateTime?
+  observedAt      DateTime @default(now())
+  provider        String?
+  externalId      String?
+  sourceUpdatedAt DateTime?
+  rawPayload      Json?
+  createdAt       DateTime @default(now())
+
+  @@index([policyId, observedAt])
+  @@unique([provider, externalId])
+}
+
+model PolicyTransaction {
+  id              String                @id @default(cuid())
+  policyId        String
+  policy          Policy                @relation(fields: [policyId], references: [id])
+  type            PolicyTransactionType
+  amount          Decimal
+  occurredAt      DateTime
+  provider        String?
+  externalId      String?
+  sourceUpdatedAt DateTime?
+  rawPayload      Json?
+  createdAt       DateTime              @default(now())
+
+  @@index([policyId, occurredAt])
+  @@unique([provider, externalId])
+}
+
+model CommissionTransaction {
+  id                  String                    @id @default(cuid())
+  policyId            String
+  policy              Policy                    @relation(fields: [policyId], references: [id])
+  agentId             String
+  agent               Agent                     @relation(fields: [agentId], references: [id])
+  type                CommissionTransactionType
+  amount              Decimal
+  occurredAt          DateTime
+  provider            String?
+  externalId          String?
+  sourceTransactionId String?
+  sourceUpdatedAt     DateTime?
+  originalTransactionId String?
+  rawPayload          Json?
+  createdAt           DateTime                  @default(now())
+
+  @@index([policyId, occurredAt])
+  @@index([agentId, occurredAt])
+  @@unique([provider, externalId])
+  @@unique([provider, sourceTransactionId])
+}
+
+model IntegrationConnection {
+  id             String     @id @default(cuid())
+  provider       String     @unique
+  status         SyncStatus @default(PENDING)
+  isEnabled      Boolean    @default(false)
+  configuration  Json?
+  lastSyncedAt   DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  syncEvents     SyncEvent[]
+}
+
+model ExternalReference {
+  id              String   @id @default(cuid())
+  entityType      String
+  entityId        String
+  provider        String
+  externalId      String
+  sourceUpdatedAt DateTime?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@unique([provider, externalId])
+}
+
+model SyncEvent {
+  id                      String                 @id @default(cuid())
+  integrationConnectionId String?
+  integrationConnection   IntegrationConnection? @relation(fields: [integrationConnectionId], references: [id])
+  provider                String
+  externalId              String
+  sourceUpdatedAt         DateTime?
+  direction               String
+  eventType               String
+  status                  SyncStatus             @default(PENDING)
+  payload                 Json?
+  attemptCount            Int                    @default(0)
+  lastError               String?
+  processedAt             DateTime?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  @@index([integrationConnectionId, status])
+  @@unique([provider, externalId])
 }
 
 model CommissionPlan {
