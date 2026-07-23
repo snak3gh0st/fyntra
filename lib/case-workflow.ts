@@ -50,6 +50,15 @@ export function canTransitionCase(from: CaseStage, to: CaseStage): boolean {
   return transitions[from].includes(to)
 }
 
+export function canCreatePolicyFromOrigin(
+  caseStage?: CaseStage | null,
+  isHistoricalImport = false,
+): boolean {
+  if (!caseStage) return isHistoricalImport
+
+  return caseStage === 'ISSUED' || caseStage === 'PLACED'
+}
+
 export function caseStageTone(stage: CaseStage): Tone {
   if (stage === 'PLACED') return 'success'
   if (stage === 'DECLINED' || stage === 'WITHDRAWN') return 'danger'

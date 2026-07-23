@@ -27,6 +27,9 @@ ALTER TABLE "Policy" ADD COLUMN     "caseId" TEXT,
 ADD COLUMN     "sourceExternalId" TEXT,
 ADD COLUMN     "sourceProvider" TEXT;
 
+-- AlterTable
+ALTER TABLE "Policy" ADD COLUMN "sourceUpdatedAt" TIMESTAMP(3);
+
 -- CreateTable
 CREATE TABLE "Prospect" (
     "id" TEXT NOT NULL,

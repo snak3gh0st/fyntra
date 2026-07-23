@@ -194,6 +194,7 @@ model Policy {
   case          InsuranceCase? @relation(fields: [caseId], references: [id])
   sourceProvider String?
   sourceExternalId String?
+  sourceUpdatedAt DateTime?
   createdAt     DateTime     @default(now())
 
   commissionRecords CommissionRecord[]

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { calculateMarketPremium, parseAgeBand, parseFaceBand } from '@/lib/policy-quote'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
+import { canCreatePolicyFromOrigin, type CaseStage } from '@/lib/case-workflow'
 import { revalidatePath } from 'next/cache'
 
 const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'INFORCE', 'LAPSED', 'CANCELLED'] as const
@@ -38,6 +39,32 @@ export async function createPolicy(formData: FormData): Promise<CreatePolicyResu
   const agent = await getCurrentAgent()
   const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
   const scopeAgentIds = new Set([agent.id, ...getDownlineIds(allAgents, agent.id)])
+
+  const requestedCaseId = (formData.get('caseId') as string | null)?.trim()
+  const isHistoricalImport = formData.get('historicalImport') === 'true'
+  let caseId: string | undefined
+  let caseStage: CaseStage | undefined
+
+  if (requestedCaseId) {
+    const insuranceCase = await prisma.insuranceCase.findFirst({
+      where: { id: requestedCaseId },
+      select: { id: true, assignedAgentId: true, stage: true },
+    })
+
+    if (!insuranceCase || !scopeAgentIds.has(insuranceCase.assignedAgentId)) {
+      return { ok: false, message: 'Caso não encontrado ou fora da sua carteira.' }
+    }
+
+    caseId = insuranceCase.id
+    caseStage = insuranceCase.stage
+  }
+
+  if (!canCreatePolicyFromOrigin(caseStage, isHistoricalImport)) {
+    return {
+      ok: false,
+      message: 'Criação manual de apólices não está disponível. Importe o histórico ou associe um caso emitido ou em vigor.',
+    }
+  }
 
   const policyNumber = (formData.get('policyNumber') as string | null)?.trim()
   if (!policyNumber) return { ok: false, message: 'Número da apólice é obrigatório.' }
@@ -144,6 +171,7 @@ export async function createPolicy(formData: FormData): Promise<CreatePolicyResu
         effectiveDate,
         lastPaymentDate,
         statusChangedAt,
+        caseId,
       },
       select: { id: true, policyNumber: true },
     })
