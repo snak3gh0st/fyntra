@@ -43,10 +43,10 @@ export default async function PoliciesPage() {
       <PageHeader title="Apólices" eyebrow="Carteira" description="Consulte o status, prêmio e detalhes das apólices da sua operação.">
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/agent/policies/new"
-            className="inline-flex min-h-10 items-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
+            href="/agent/cases/new"
+            className="inline-flex min-h-10 items-center rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-[background-color,transform] duration-150 hover:bg-teal-deep focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
           >
-            Nova apólice
+            Novo caso
           </Link>
           <Link
             href="/agent/illustrations/new"

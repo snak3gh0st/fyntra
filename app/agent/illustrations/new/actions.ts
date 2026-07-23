@@ -192,7 +192,7 @@ export async function createIllustrationRequest(formData: FormData): Promise<Cre
   if (!lastName) return { ok: false, message: 'Informe o sobrenome.' }
   if (!dateOfBirthRaw) return { ok: false, message: 'Informe a data de nascimento (DOB).' }
   if (age === null || age < 0 || age > 120) return { ok: false, message: 'Informe uma idade válida entre 0 e 120.' }
-  if (!['YES', 'NO', 'FORMER'].includes(tobaccoStatus)) {
+  if (tobaccoStatus !== 'YES' && tobaccoStatus !== 'NO' && tobaccoStatus !== 'FORMER') {
     return { ok: false, message: 'Informe a situação de tabagismo.' }
   }
 

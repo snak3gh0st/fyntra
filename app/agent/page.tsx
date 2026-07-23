@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
@@ -45,6 +46,36 @@ function BreakdownList({
   )
 }
 
+function WorkCard({
+  href,
+  label,
+  value,
+  tone,
+}: {
+  href: string
+  label: string
+  value: number
+  tone: 'teal' | 'gold' | 'danger'
+}) {
+  const toneClass =
+    value === 0
+      ? 'text-ink-muted'
+      : tone === 'danger'
+        ? 'text-danger'
+        : tone === 'gold'
+          ? 'text-gold-ink'
+          : 'text-teal'
+  return (
+    <Link
+      href={href}
+      className="group rounded-lg border border-border-steel bg-paper px-5 py-4 transition-[border-color,background-color] duration-150 hover:border-teal hover:bg-teal-pale/40"
+    >
+      <p className="text-xs font-semibold text-ink-muted">{label}</p>
+      <p className={`mt-2 font-mono text-2xl font-semibold tabular-nums ${toneClass}`}>{value}</p>
+    </Link>
+  )
+}
+
 function safeGroupCount(groupCount: unknown): number {
   if (groupCount && typeof groupCount === 'object' && '_all' in groupCount) {
     const countObj = groupCount as { _all?: number }
@@ -58,10 +89,20 @@ export default async function AgentDashboard() {
   const user = await prisma.user.findUnique({ where: { id: agent.userId } })
   const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
   const downlineIds = getDownlineIds(allAgents, agent.id)
+  const scope = [agent.id, ...downlineIds]
 
   const now = new Date()
   const currentP = periodFromDate(now)
   const previousP = shiftPeriod(currentP, -1)
+
+  // Work-queue counters (actionable, scoped to the agent + downline).
+  let openCases = 0
+  let awaitingIllustration = 0
+  let openRequirements = 0
+  let atRiskPolicies = 0
+  let txnExpected = 0
+  let txnPaid = 0
+  let txnChargeback = 0
 
   let policyCount = 0
   let commissionTotalAmount = 0
@@ -83,6 +124,11 @@ export default async function AgentDashboard() {
       carrierBuckets,
       productBuckets,
       monthBuckets,
+      openCasesCount,
+      awaitingIllustrationCount,
+      openRequirementsCount,
+      atRiskCount,
+      txnByType,
     ] = await Promise.all([
       prisma.policy.count({ where: { agentId: agent.id } }),
       prisma.commissionRecord.aggregate({ where: { agentId: agent.id }, _sum: { amount: true } }),
@@ -107,7 +153,29 @@ export default async function AgentDashboard() {
         orderBy: { product: 'asc' },
       }),
       prisma.policy.findMany({ where: { agentId: agent.id }, select: { createdAt: true } }),
+      prisma.insuranceCase.count({ where: { assignedAgentId: { in: scope }, status: 'OPEN' } }),
+      prisma.insuranceCase.count({ where: { assignedAgentId: { in: scope }, stage: { in: ['DISCOVERY', 'DESIGN'] } } }),
+      prisma.applicationRequirement.count({
+        where: { status: 'OPEN', application: { insuranceCase: { assignedAgentId: { in: scope } } } },
+      }),
+      prisma.policy.count({ where: { agentId: agent.id, status: 'LAPSED' } }),
+      prisma.commissionTransaction.groupBy({
+        by: ['type'],
+        where: { agentId: agent.id },
+        _sum: { amount: true },
+      }),
     ])
+
+    openCases = openCasesCount
+    awaitingIllustration = awaitingIllustrationCount
+    openRequirements = openRequirementsCount
+    atRiskPolicies = atRiskCount
+    for (const t of txnByType) {
+      const sum = decimalToNumber(t._sum.amount)
+      if (t.type === 'EXPECTED') txnExpected = sum
+      else if (t.type === 'PAID') txnPaid = sum
+      else if (t.type === 'CHARGEBACK') txnChargeback = sum
+    }
 
     policyCount = policyTotal
     commissionTotalAmount = decimalToNumber(commissionAgg._sum.amount)
@@ -126,13 +194,30 @@ export default async function AgentDashboard() {
 
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
-      <PageHeader title="Meu painel" eyebrow="Visão geral" description="Veja o andamento da sua carteira, comissão e downline." />
+      <PageHeader title="Hoje" eyebrow="Fila de trabalho" description="O que precisa de ação primeiro. Os indicadores da carteira ficam abaixo." />
       {loadError && (
         <ErrorBanner>
           Não foi possível carregar seus dados agora. Os números abaixo podem estar incompletos — tente atualizar a página.
         </ErrorBanner>
       )}
-      <div className="mt-8">
+
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <WorkCard href="/agent/cases" label="Casos ativos" value={openCases} tone="teal" />
+        <WorkCard href="/agent/cases" label="Aguardando ilustração" value={awaitingIllustration} tone="gold" />
+        <WorkCard href="/agent/cases" label="Requirements abertos" value={openRequirements} tone="gold" />
+        <WorkCard href="/agent/policies" label="Apólices em risco" value={atRiskPolicies} tone="danger" />
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border-steel bg-border-steel sm:grid-cols-3">
+        <StatCard label="Comissão esperada" value={`$${txnExpected.toFixed(2)}`} />
+        <StatCard label="Comissão paga" value={`$${txnPaid.toFixed(2)}`} />
+        <StatCard label="Chargebacks" value={`$${txnChargeback.toFixed(2)}`} />
+      </div>
+
+      <div className="mt-10 border-t border-border-steel pt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-ink-muted">Indicadores da carteira</h2>
+      </div>
+      <div className="mt-6">
         <StatCardHero
           label="Comissão este mês"
           value={`$${commissionThisMonth.toFixed(2)}`}
