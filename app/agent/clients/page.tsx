@@ -34,7 +34,7 @@ export default async function ClientsPage() {
           <p>Esta lista reúne seus clientes e os clientes dos agentes abaixo de você na hierarquia.</p>
           <div className="mt-5 border-t border-white/10 pt-4">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Próximo passo</p>
-            <p className="mt-2">Abra uma apólice para conferir prêmio, status e documentos.</p>
+            <p className="mt-2">Abra um caso para conduzir uma nova venda, ou consulte as apólices já emitidas do cliente.</p>
           </div>
         </ContextPanel>
       </div>

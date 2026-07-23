@@ -1,11 +1,9 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentAgent } from '@/lib/agent-context'
-import { getDownlineIds } from '@/lib/hierarchy'
 import { Shell } from '@/components/Shell'
 import { PageHeader } from '@/components/PageHeader'
 import { ContextPanel } from '@/components/ContextPanel'
-import { NewPolicyForm } from '../NewPolicyForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,21 +11,12 @@ export default async function NewPolicyPage() {
   const agent = await getCurrentAgent()
   const user = await prisma.user.findUnique({ where: { id: agent.userId } })
 
-  const allAgents = await prisma.agent.findMany({ select: { id: true, parentAgentId: true } })
-  const scopeAgentIds = [agent.id, ...getDownlineIds(allAgents, agent.id)]
-
-  const clients = await prisma.client.findMany({
-    where: { assignedAgentId: { in: scopeAgentIds } },
-    select: { id: true, name: true, email: true },
-    orderBy: { name: 'asc' },
-  })
-
   return (
     <Shell role="AGENT" userName={user?.name ?? ''}>
       <PageHeader
-        title="Nova apólice"
-        eyebrow="Carteira"
-        description="Cadastre uma apólice no padrão atual da operação."
+        title="Apólices não são criadas manualmente"
+        eyebrow="Como funciona"
+        description="Uma apólice representa um contrato real — ela surge da emissão de um caso ou de uma importação de histórico autorizada."
       >
         <Link
           href="/agent/policies"
@@ -37,34 +26,38 @@ export default async function NewPolicyPage() {
         </Link>
       </PageHeader>
       <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="max-w-5xl">
-          <NewPolicyForm
-            clients={clients.map((client) => ({
-              id: client.id,
-              name: client.name,
-              email: client.email,
-            }))}
-          />
+        <div className="max-w-3xl rounded-md border border-border-steel bg-paper p-6">
+          <h2 className="text-base font-semibold text-ink">Por onde uma apólice aparece</h2>
+          <ol className="mt-4 space-y-4 text-sm text-ink-muted">
+            <li>
+              <strong className="text-ink">1. Abra um caso.</strong> Registre o prospect e conduza a venda pelas etapas até a emissão.
+              A apólice é criada quando o caso é emitido.
+            </li>
+            <li>
+              <strong className="text-ink">2. Importação de histórico.</strong> Apólices já existentes entram por importação
+              autorizada (feita pela administração), preservando a origem e o número original.
+            </li>
+          </ol>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/agent/cases/new"
+              className="inline-flex min-h-10 items-center rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-[background-color] duration-150 hover:bg-teal-deep"
+            >
+              Novo caso
+            </Link>
+            <Link
+              href="/agent/cases"
+              className="inline-flex min-h-10 items-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color] duration-150 hover:border-teal-deep hover:bg-teal-pale"
+            >
+              Ver meus casos
+            </Link>
+          </div>
         </div>
-        <ContextPanel eyebrow="Dica rápida" title="O que preencher">
-          <p>Selecione um cliente da sua carteira para reaproveitar dados existentes.</p>
+        <ContextPanel eyebrow="Por quê" title="Origem controlada">
+          <p>Impedir a criação manual garante que toda apólice tenha um caso ou uma importação por trás — sem números soltos.</p>
           <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Novo cliente</p>
-            <p className="mt-2 text-sm text-ink-muted">
-              Se o cliente não estiver listado, escolha “Novo cliente” e informe nome e e-mail (opcional).
-            </p>
-          </div>
-          <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Status</p>
-            <p className="mt-2 text-sm text-ink-muted">A data de início e último pagamento são opcionais.</p>
-          </div>
-          <div className="mt-5 border-t border-white/10 pt-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Cotação</p>
-            <p className="mt-2 text-sm text-ink-muted">
-              Term 15 / 20 / 30 e IUL (como “Indexed Universal Life”) possuem taxa de simulação de mercado específica.
-              Também existe ajuste por faixa etária e faixa de cobertura para simular cenários de cotação.
-              A ilustração formal ainda não é gerada aqui; por ora, a criação já aplica o prêmio cotado automaticamente.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-paper/45">Importação</p>
+            <p className="mt-2 text-sm text-ink-muted">A importação de histórico é feita pela administração em “Importar dados”.</p>
           </div>
         </ContextPanel>
       </div>

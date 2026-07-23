@@ -28,13 +28,15 @@ export function PoliciesList({ policies }: { policies: Policy[] }) {
   if (policies.length === 0) {
     return (
       <div className="space-y-4">
-        <EmptyState>Nenhuma apólice ainda.</EmptyState>
+        <EmptyState>
+          Nenhuma apólice ainda. Apólices aparecem quando um caso é emitido ou por importação de histórico autorizada — elas não são criadas manualmente.
+        </EmptyState>
         <div className="space-y-3">
           <Link
-            href="/agent/policies/new"
-            className="inline-flex w-full justify-center rounded-md border border-teal px-4 py-2.5 text-sm font-semibold text-teal transition-[background-color,border-color,color,transform] duration-150 hover:border-teal-deep hover:bg-teal-pale"
+            href="/agent/cases/new"
+            className="inline-flex w-full justify-center rounded-md bg-teal px-4 py-2.5 text-sm font-semibold text-paper transition-[background-color] duration-150 hover:bg-teal-deep"
           >
-            Criar primeira apólice
+            Abrir um caso
           </Link>
           <Link
             href="/agent/illustrations/new"

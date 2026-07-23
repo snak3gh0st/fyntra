@@ -37,15 +37,29 @@ export const PolicyRowSchema = z.object({
   status: z.enum(['PENDING', 'APPROVED', 'INFORCE', 'LAPSED', 'CANCELLED']),
   effectiveDate: z.string().optional(),
   lastPaymentDate: z.string().optional(),
+  // Optional provenance for provider-sourced imports. Absent in the existing
+  // manual CSV, which stays valid; the service defaults the provider.
+  sourceProvider: z.string().optional(),
+  sourceExternalId: z.string().optional(),
 })
 
 export type PolicyRow = z.infer<typeof PolicyRowSchema>
+
+// Persisted CommissionTransaction.type. Note: the plan's direction vocabulary
+// (EARNING/OVERRIDE/...) is a domain concept in lib/financial-transactions.ts;
+// the column stored here is the Prisma enum. A commission CSV without this
+// column defaults to PAID (money actually paid) in the service.
+export const COMMISSION_TRANSACTION_TYPES = ['EXPECTED', 'PAID', 'CHARGEBACK', 'ADJUSTMENT'] as const
 
 export const CommissionRowSchema = z.object({
   policyNumber: z.string().min(1),
   agentNpn: z.string().min(1),
   amount: numericString,
   period: z.string().regex(/^\d{4}-\d{2}$/, 'período deve estar no formato AAAA-MM'),
+  // Optional provenance for provider-sourced imports; existing CSV stays valid.
+  transactionType: z.enum(COMMISSION_TRANSACTION_TYPES).optional(),
+  sourceProvider: z.string().optional(),
+  sourceTransactionId: z.string().optional(),
 })
 
 export type CommissionRow = z.infer<typeof CommissionRowSchema>
