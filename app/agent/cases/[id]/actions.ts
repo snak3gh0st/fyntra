@@ -55,6 +55,58 @@ export async function transitionCase(caseId: string, nextStage: CaseStage): Prom
   return { ok: true }
 }
 
+// Standard life-application document checklist. These are Fyntra-owned tracking
+// items, not carrier-authoritative requirements — when a vendor feed is wired,
+// its requirements sync in via provider/externalId alongside these.
+const STANDARD_REQUIREMENTS = [
+  'Formulário de aplicação assinado',
+  'Documento de identidade',
+  'Exame médico / paramédico',
+  'Autorização HIPAA',
+  'Comprovante de pagamento inicial',
+]
+
+// An application is "active" until it terminates. Only one active application
+// per case — a declined/withdrawn one can be superseded by a fresh start.
+const ACTIVE_APPLICATION: string[] = ['DRAFT', 'STARTED', 'SUBMITTED', 'UNDERWRITING', 'APPROVED', 'ISSUED']
+
+export async function startApplication(caseId: string): Promise<ActionResult> {
+  const { scope } = await agentScopeIds()
+
+  const insuranceCase = await prisma.insuranceCase.findUnique({
+    where: { id: caseId },
+    select: { id: true, assignedAgentId: true, applications: { select: { status: true } } },
+  })
+  if (!insuranceCase || !canAccessCase({ role: 'AGENT', agentScopeIds: scope }, insuranceCase)) {
+    return { ok: false, message: 'Caso não encontrado ou fora da sua carteira.' }
+  }
+
+  if (insuranceCase.applications.some((a) => ACTIVE_APPLICATION.includes(a.status))) {
+    return { ok: false, message: 'Já existe uma aplicação em andamento para este caso.' }
+  }
+
+  await prisma.$transaction([
+    prisma.application.create({
+      data: {
+        caseId,
+        status: 'STARTED',
+        requirements: { create: STANDARD_REQUIREMENTS.map((title) => ({ title })) },
+      },
+    }),
+    prisma.caseTimelineEvent.create({
+      data: {
+        caseId,
+        type: 'APPLICATION_STARTED',
+        title: 'Aplicação iniciada',
+        body: `Checklist padrão criado com ${STANDARD_REQUIREMENTS.length} requirements.`,
+      },
+    }),
+  ])
+
+  revalidatePath(`/agent/cases/${caseId}`)
+  return { ok: true }
+}
+
 const REQUIREMENT_STATUSES = ['OPEN', 'RECEIVED', 'WAIVED'] as const
 type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number]
 

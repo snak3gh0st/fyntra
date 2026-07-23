@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { CaseStagePill, PolicyStatusPill } from "@/components/StatusPill";
 import { caseStageLabel, type CaseStage } from "@/lib/case-workflow";
-import { transitionCase, updateRequirement } from "./actions";
+import { transitionCase, updateRequirement, startApplication } from "./actions";
 
 type Requirement = { id: string; title: string; status: string };
 type Application = { id: string; status: string; requirements: Requirement[] };
@@ -94,6 +94,17 @@ export function CaseWorkspace({ caseData: c }: { caseData: CaseData }) {
     });
   }
 
+  function beginApplication() {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await startApplication(c.id);
+      if (result.ok) router.refresh();
+      else setMessage(result.message);
+    });
+  }
+
+  const hasApplication = c.applications.length > 0;
+
   return (
     <div className="space-y-6">
       <Link href="/agent/cases" className="text-sm font-semibold text-teal hover:text-teal-deep">
@@ -157,8 +168,13 @@ export function CaseWorkspace({ caseData: c }: { caseData: CaseData }) {
       </Section>
 
       <Section title="Aplicação">
-        {c.applications.length === 0 ? (
-          <Empty>Nenhuma aplicação iniciada. A aplicação aparece ao avançar o caso para a etapa de aplicação.</Empty>
+        {!hasApplication ? (
+          <div className="space-y-3">
+            <Empty>Nenhuma aplicação iniciada. Ao iniciar, um checklist padrão de requirements é criado para acompanhamento.</Empty>
+            <Button variant="primary" disabled={pending} onClick={beginApplication}>
+              Iniciar aplicação
+            </Button>
+          </div>
         ) : (
           <ul className="space-y-2">
             {c.applications.map((app) => (
