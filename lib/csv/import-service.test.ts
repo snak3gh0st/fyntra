@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  deriveCommissionSourceId,
   deriveStatus,
   parseCsv,
+  periodToDate,
+  resolveImportProvider,
+  resolvePolicyExternalId,
   safeParseCsv,
   shouldUpdateStatusChangedAt,
   statusChangedAtForCreate,
@@ -79,5 +83,48 @@ describe('statusChangedAtForCreate', () => {
 
   it('returns a Date for a non-terminal status like INFORCE', () => {
     expect(statusChangedAtForCreate('INFORCE')).toBeInstanceOf(Date)
+  })
+})
+
+describe('resolveImportProvider', () => {
+  it('defaults a missing provider to MANUAL_IMPORT', () => {
+    expect(resolveImportProvider(undefined)).toBe('MANUAL_IMPORT')
+    expect(resolveImportProvider('  ')).toBe('MANUAL_IMPORT')
+  })
+
+  it('keeps an explicit provider', () => {
+    expect(resolveImportProvider('NATIONAL_LIFE')).toBe('NATIONAL_LIFE')
+  })
+})
+
+describe('resolvePolicyExternalId', () => {
+  it('falls back to the policy number', () => {
+    expect(resolvePolicyExternalId(null, 'NLG-0002')).toBe('NLG-0002')
+  })
+
+  it('prefers an explicit external id', () => {
+    expect(resolvePolicyExternalId('POL-9', 'NLG-0002')).toBe('POL-9')
+  })
+})
+
+describe('deriveCommissionSourceId', () => {
+  const base = { filename: 'jan.csv', rowNumber: 2, policyNumber: 'NLG-0002', agentNpn: '1000003', period: '2026-01' }
+
+  it('is deterministic for the same inputs', () => {
+    expect(deriveCommissionSourceId(base)).toBe(deriveCommissionSourceId(base))
+  })
+
+  it('differs per row so distinct rows never collide', () => {
+    expect(deriveCommissionSourceId(base)).not.toBe(deriveCommissionSourceId({ ...base, rowNumber: 3 }))
+  })
+
+  it('prefers an explicit source transaction id', () => {
+    expect(deriveCommissionSourceId({ ...base, sourceTransactionId: 'EVT-42' })).toBe('EVT-42')
+  })
+})
+
+describe('periodToDate', () => {
+  it('anchors a period to the first of the month (UTC)', () => {
+    expect(periodToDate('2026-01').toISOString()).toBe('2026-01-01T00:00:00.000Z')
   })
 })

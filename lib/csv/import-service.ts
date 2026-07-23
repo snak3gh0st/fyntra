@@ -18,6 +18,45 @@ export function statusChangedAtForCreate(status: string): Date | null {
   return status === 'LAPSED' || status === 'CANCELLED' ? null : new Date()
 }
 
+// A manually uploaded CSV has no upstream provider; label those rows so the
+// external-reference uniqueness constraints still have a stable namespace.
+export const MANUAL_IMPORT_PROVIDER = 'MANUAL_IMPORT'
+
+export function resolveImportProvider(sourceProvider?: string | null): string {
+  const trimmed = sourceProvider?.trim()
+  return trimmed && trimmed.length > 0 ? trimmed : MANUAL_IMPORT_PROVIDER
+}
+
+// Provider-neutral external id for a policy snapshot. Prefer the carrier's own
+// id; fall back to the policy number so a manual re-import upserts the same
+// snapshot row instead of duplicating it.
+export function resolvePolicyExternalId(sourceExternalId: string | null | undefined, policyNumber: string): string {
+  const trimmed = sourceExternalId?.trim()
+  return trimmed && trimmed.length > 0 ? trimmed : policyNumber
+}
+
+// Stable source id for a commission transaction so re-uploading the same file
+// upserts in place (no duplicated money) rather than inserting again. Prefer an
+// explicit id from the feed; otherwise derive one deterministically.
+export function deriveCommissionSourceId(input: {
+  sourceTransactionId?: string | null
+  filename: string
+  rowNumber: number
+  policyNumber: string
+  agentNpn: string
+  period: string
+}): string {
+  const explicit = input.sourceTransactionId?.trim()
+  if (explicit) return explicit
+  return [input.filename, input.rowNumber, input.policyNumber, input.agentNpn, input.period].join('|')
+}
+
+// period is validated as 'YYYY-MM'; anchor the transaction to the first of the
+// month so ordering and aggregation have a concrete instant.
+export function periodToDate(period: string): Date {
+  return new Date(`${period}-01T00:00:00.000Z`)
+}
+
 export type ImportStatus = 'COMPLETED' | 'COMPLETED_WITH_ERRORS' | 'FAILED'
 
 type ImportResult = {
@@ -93,7 +132,8 @@ export async function importPolicies(content: string, uploadedById: string, file
     const statusChangedAt = shouldUpdateStatusChangedAt(existingPolicy, row.status)
       ? new Date()
       : undefined
-    await prisma.policy.upsert({
+    const lastPaymentDate = row.lastPaymentDate ? new Date(row.lastPaymentDate) : null
+    const policy = await prisma.policy.upsert({
       where: { policyNumber: row.policyNumber },
       create: {
         clientId: client.id,
@@ -105,9 +145,11 @@ export async function importPolicies(content: string, uploadedById: string, file
         premium: row.premium,
         status: row.status,
         effectiveDate: row.effectiveDate ? new Date(row.effectiveDate) : null,
-        lastPaymentDate: row.lastPaymentDate ? new Date(row.lastPaymentDate) : null,
+        lastPaymentDate,
         statusChangedAt: statusChangedAtForCreate(row.status),
         importBatchId: batch.id,
+        sourceProvider: row.sourceProvider ?? null,
+        sourceExternalId: row.sourceExternalId ?? null,
       },
       update: {
         carrier: row.carrier,
@@ -115,10 +157,31 @@ export async function importPolicies(content: string, uploadedById: string, file
         faceAmount: row.faceAmount,
         premium: row.premium,
         status: row.status,
-        lastPaymentDate: row.lastPaymentDate ? new Date(row.lastPaymentDate) : null,
+        lastPaymentDate,
         ...(statusChangedAt ? { statusChangedAt } : {}),
         importBatchId: batch.id,
       },
+      select: { id: true },
+    })
+
+    // Append a point-in-time snapshot from ONLY the columns we actually have.
+    // Cash value, loan balance and charges have no CSV column, so we never
+    // fabricate them. Idempotent on [provider, externalId] so a re-upload
+    // updates the same snapshot instead of duplicating it.
+    const provider = resolveImportProvider(row.sourceProvider)
+    const externalId = resolvePolicyExternalId(row.sourceExternalId, row.policyNumber)
+    const snapshotData = {
+      status: row.status,
+      faceAmount: row.faceAmount,
+      plannedPremium: row.premium,
+      lastPaymentDate,
+      provider,
+      externalId,
+    }
+    await prisma.policySnapshot.upsert({
+      where: { provider_externalId: { provider, externalId } },
+      create: { policyId: policy.id, ...snapshotData },
+      update: snapshotData,
     })
     successCount += 1
   }
@@ -202,6 +265,31 @@ export async function importCommissions(content: string, uploadedById: string, f
         amount: row.amount,
         importBatchId: batch.id,
       },
+    })
+
+    // Immutable ledger entry alongside the legacy CommissionRecord (kept for
+    // Release 1 so existing dashboards keep working). Upsert on the source id
+    // so a duplicate source row updates in place and never duplicates money.
+    const provider = resolveImportProvider(row.sourceProvider)
+    const sourceTransactionId = deriveCommissionSourceId({
+      sourceTransactionId: row.sourceTransactionId,
+      filename,
+      rowNumber: index + 2,
+      policyNumber: row.policyNumber,
+      agentNpn: row.agentNpn,
+      period: row.period,
+    })
+    const txnData = {
+      type: row.transactionType ?? 'PAID',
+      amount: row.amount,
+      occurredAt: periodToDate(row.period),
+      provider,
+      sourceTransactionId,
+    } as const
+    await prisma.commissionTransaction.upsert({
+      where: { provider_sourceTransactionId: { provider, sourceTransactionId } },
+      create: { policyId: policy.id, agentId: agent.id, ...txnData },
+      update: txnData,
     })
 
     const overrides = computeOverrides(allAgents, agent.id, row.amount, lookupPlan)

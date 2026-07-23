@@ -111,4 +111,71 @@ describe('CommissionRowSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  it('accepts a provider-sourced row with a chargeback transaction type', () => {
+    const result = CommissionRowSchema.safeParse({
+      policyNumber: 'NLG-0002',
+      agentNpn: '1000003',
+      amount: '45.50',
+      period: '2026-01',
+      transactionType: 'CHARGEBACK',
+      sourceProvider: 'NATIONAL_LIFE',
+      sourceTransactionId: 'EVT-42',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.transactionType).toBe('CHARGEBACK')
+      expect(result.data.sourceTransactionId).toBe('EVT-42')
+    }
+  })
+
+  it('rejects an unknown transaction type at the row level', () => {
+    const result = CommissionRowSchema.safeParse({
+      policyNumber: 'NLG-0002',
+      agentNpn: '1000003',
+      amount: '45.50',
+      period: '2026-01',
+      transactionType: 'BONUS',
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('PolicyRowSchema provenance columns', () => {
+  it('still parses a row with no provenance columns', () => {
+    const result = PolicyRowSchema.safeParse({
+      clientName: 'Cliente Exemplo',
+      agentNpn: '1000003',
+      carrier: 'National Life Group',
+      product: 'Term 20',
+      policyNumber: 'NLG-0002',
+      faceAmount: '250000',
+      premium: '45.50',
+      status: 'INFORCE',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.sourceProvider).toBeUndefined()
+    }
+  })
+
+  it('captures optional source provider identifiers', () => {
+    const result = PolicyRowSchema.safeParse({
+      clientName: 'Cliente Exemplo',
+      agentNpn: '1000003',
+      carrier: 'National Life Group',
+      product: 'Term 20',
+      policyNumber: 'NLG-0002',
+      faceAmount: '250000',
+      premium: '45.50',
+      status: 'INFORCE',
+      sourceProvider: 'NATIONAL_LIFE',
+      sourceExternalId: 'POL-NLG-0002',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.sourceProvider).toBe('NATIONAL_LIFE')
+      expect(result.data.sourceExternalId).toBe('POL-NLG-0002')
+    }
+  })
 })
