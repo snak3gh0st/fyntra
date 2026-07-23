@@ -6,7 +6,7 @@ import { Button } from "@/components/Button";
 import { Field, Input, Select } from "@/components/Field";
 import { createIllustrationRequest } from "./new/actions";
 
-type RequestPayload = {
+type QuoteResult = {
   firstName: string
   lastName: string
   dateOfBirth: string
@@ -18,13 +18,19 @@ type Message =
   | {
       ok: true
       text: string
-      requestUrl: string | null
-      requestQuery: string
-      requestPayload: RequestPayload
-      submitted: boolean
-      executionMessage: string
-      executionStatusCode: number | null
-      partnerResponseSnippet?: string
+      insured: QuoteResult
+      coverageAmount: number
+      ageBand: string
+      tobaccoFactor: number
+      quotes: Array<{
+        productCode: "TERM_15" | "TERM_20" | "TERM_30" | "IUL"
+        productLabel: string
+        formulaLabel: string
+        basePremium: number
+        tobaccoFactor: number
+        premium: number
+      }>
+      calculatedAt: string
     }
   | {
       ok: false
@@ -41,19 +47,16 @@ export function NewIllustrationForm() {
 
     const result = await createIllustrationRequest(formData);
     if (result.ok) {
-      const text = result.submitted
-        ? "Solicitação enviada com sucesso para o endpoint de ilustração."
-        : "Prévia de solicitação pronta. Abra o link abaixo para enviar ao parceiro."
+      const text = "Cotações de mercado geradas internamente para este prospect."
       setMessage({
         ok: true,
         text,
-        requestUrl: result.requestUrl,
-        requestQuery: result.requestQuery,
-        requestPayload: result.requestPayload,
-        submitted: result.submitted,
-        executionMessage: result.executionMessage,
-        executionStatusCode: result.executionStatusCode,
-        partnerResponseSnippet: result.partnerResponseSnippet,
+        insured: result.insured,
+        coverageAmount: result.coverageAmount,
+        ageBand: result.ageBand,
+        tobaccoFactor: result.tobaccoFactor,
+        quotes: result.quotes,
+        calculatedAt: result.calculatedAt,
       });
     } else {
       setMessage({ ok: false, text: result.message });
@@ -61,6 +64,13 @@ export function NewIllustrationForm() {
 
     setSubmitting(false);
   }
+
+  const currency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(value)
 
   return (
     <div className="rounded-md border border-border-steel bg-paper p-5">
@@ -89,7 +99,7 @@ export function NewIllustrationForm() {
 
         <div className="sm:col-span-2">
           <Button type="submit" variant="primary" disabled={submitting}>
-            {submitting ? "Gerando solicitação..." : "Criar solicitação de ilustração"}
+            {submitting ? "Calculando..." : "Calcular ilustração"}
           </Button>
         </div>
       </form>
@@ -101,45 +111,47 @@ export function NewIllustrationForm() {
           </p>
           {message.ok && (
             <>
-              <p className="text-sm text-ink-muted">{message.executionMessage}</p>
-              {message.requestUrl ? (
-                <a
-                  href={message.requestUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-10 items-center rounded-md border border-border-steel bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-[background-color,border-color,color,transform] duration-150 hover:border-teal hover:bg-teal-pale/40 focus-visible:ring-[3px] focus-visible:ring-teal-pale focus-visible:outline-none"
-                >
-                  Abrir resposta do parceiro
-                </a>
-              ) : (
-                <>
-                  <p className="text-sm text-ink-muted">
-                    ILLUSTRATION_REQUEST_URL não está definida no ambiente.
+              <div className="rounded-md border border-border-steel bg-paper p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-ink">
+                    Cálculo interno • Sem envio para parceiro
                   </p>
-                  <p className="text-xs text-ink-muted">Use estes dados para disparar a solicitação no parceiro:</p>
-                  <pre className="overflow-x-auto rounded-md border border-border-steel bg-panel p-3 text-xs">
-                    {JSON.stringify(message.requestPayload, null, 2)}
-                  </pre>
-                  <p className="text-xs text-ink-muted">Query string:</p>
-                  <pre className="overflow-x-auto rounded-md border border-border-steel bg-panel p-3 text-xs">
-                    {message.requestQuery}
-                  </pre>
-                </>
-              )}
-              {message.partnerResponseSnippet ? (
-                <details>
-                  <summary className="cursor-pointer text-xs font-semibold text-ink-muted">Resposta do parceiro</summary>
-                  <pre className="mt-2 overflow-x-auto rounded-md border border-border-steel bg-panel p-3 text-xs">
-                    {message.partnerResponseSnippet}
-                  </pre>
-                </details>
-              ) : null}
-              {message.executionStatusCode ? (
-                <p className="text-xs text-ink-muted">Status HTTP: {message.executionStatusCode}</p>
-              ) : null}
-              {message.submitted ? null : (
-                <p className="text-xs text-ink-muted">Sem envio automático configurado no momento.</p>
-              )}
+                  <p className="text-xs text-ink-muted">
+                    Cobertura-base: {currency(message.coverageAmount)} (referência fixa por simulação)
+                  </p>
+                </div>
+                <div className="mt-3 text-xs text-ink-muted">
+                  <p>Nome: {message.insured.firstName} {message.insured.lastName}</p>
+                  <p>DOB: {message.insured.dateOfBirth}</p>
+                  <p>Idade: {message.insured.age} anos</p>
+                  <p>Faixa etária: {message.ageBand}</p>
+                  <p>Tabagismo: {message.insured.tobaccoStatus === "YES" ? "Fumante" : message.insured.tobaccoStatus === "FORMER" ? "Ex-fumante" : "Não fumante"} x {message.tobaccoFactor}</p>
+                  <p>Gerado em: {new Date(message.calculatedAt).toLocaleString("pt-BR")}</p>
+                </div>
+
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 text-left text-xs uppercase tracking-[0.1em] text-ink-muted">
+                        <th className="pb-2 pr-3 font-medium">Produto</th>
+                        <th className="pb-2 pr-3 font-medium">Fórmula de mercado</th>
+                        <th className="pb-2 pr-3 font-medium">Prêmio base</th>
+                        <th className="pb-2 font-medium">Prêmio com tabaco</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {message.quotes.map((quote) => (
+                        <tr key={quote.productCode} className="border-b border-white/5">
+                          <td className="py-2 pr-3 text-sm font-medium text-ink">{quote.productLabel}</td>
+                          <td className="py-2 pr-3 text-xs text-ink-muted">{quote.formulaLabel}</td>
+                          <td className="py-2 pr-3 text-sm text-ink">{currency(quote.basePremium)}</td>
+                          <td className="py-2 text-sm font-semibold text-ink">{currency(quote.premium)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </>
           )}
           <p>

@@ -22,7 +22,7 @@ Specs e planos de cada entrega ficam em `docs/superpowers/specs/` e `docs/superp
 - **Portal do Cliente** (`/client`): apólices próprias (somente leitura), documentos.
 - **Admin** (`/admin`): import de CSV (apólices/comissões), configuração de planos de comissão, gestão de agentes/hierarquia.
 
-Fora de escopo por ora: comparação entre agentes/período (admin). A trilha de ilustração já está ativa em `/agent/illustrations/new` com envio por `ILLUSTRATION_REQUEST_URL`.
+Fora de escopo por ora: comparação entre agentes/período (admin). A trilha de ilustração já está ativa em `/agent/illustrations/new`, com cálculo interno de mercado para Term 15/20/30 e IUL.
 
 ## Stack
 
