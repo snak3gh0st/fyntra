@@ -85,9 +85,12 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
           })),
           timeline: c.timelineEvents.map((t) => ({
             id: t.id,
+            type: t.type,
             title: t.title,
             body: t.body,
             createdAt: t.createdAt.toISOString(),
+            dueAt: t.dueAt ? t.dueAt.toISOString() : null,
+            doneAt: t.doneAt ? t.doneAt.toISOString() : null,
           })),
         }}
       />

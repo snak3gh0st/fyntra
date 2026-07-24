@@ -108,6 +108,65 @@ export async function startApplication(caseId: string): Promise<ActionResult> {
   return { ok: true }
 }
 
+export async function addCaseNote(caseId: string, body: string): Promise<ActionResult> {
+  const text = body.trim()
+  if (!text) return { ok: false, message: 'A nota não pode ficar vazia.' }
+  if (text.length > 2000) return { ok: false, message: 'Nota muito longa (máx. 2000 caracteres).' }
+
+  const { scope } = await agentScopeIds()
+  const insuranceCase = await prisma.insuranceCase.findUnique({
+    where: { id: caseId },
+    select: { id: true, assignedAgentId: true },
+  })
+  if (!insuranceCase || !canAccessCase({ role: 'AGENT', agentScopeIds: scope }, insuranceCase)) {
+    return { ok: false, message: 'Caso não encontrado ou fora da sua carteira.' }
+  }
+
+  await prisma.caseTimelineEvent.create({
+    data: { caseId, type: 'NOTE', title: 'Nota', body: text },
+  })
+  revalidatePath(`/agent/cases/${caseId}`)
+  return { ok: true }
+}
+
+export async function addFollowUp(caseId: string, title: string, dueAt: string): Promise<ActionResult> {
+  const text = title.trim()
+  if (!text) return { ok: false, message: 'Descreva o follow-up.' }
+  const due = new Date(dueAt)
+  if (Number.isNaN(due.getTime())) return { ok: false, message: 'Data de follow-up inválida.' }
+
+  const { scope } = await agentScopeIds()
+  const insuranceCase = await prisma.insuranceCase.findUnique({
+    where: { id: caseId },
+    select: { id: true, assignedAgentId: true },
+  })
+  if (!insuranceCase || !canAccessCase({ role: 'AGENT', agentScopeIds: scope }, insuranceCase)) {
+    return { ok: false, message: 'Caso não encontrado ou fora da sua carteira.' }
+  }
+
+  await prisma.caseTimelineEvent.create({
+    data: { caseId, type: 'FOLLOW_UP', title: text, dueAt: due },
+  })
+  revalidatePath(`/agent/cases/${caseId}`)
+  return { ok: true }
+}
+
+export async function completeFollowUp(eventId: string): Promise<ActionResult> {
+  const { scope } = await agentScopeIds()
+  const event = await prisma.caseTimelineEvent.findUnique({
+    where: { id: eventId },
+    select: { id: true, caseId: true, doneAt: true, insuranceCase: { select: { assignedAgentId: true } } },
+  })
+  if (!event || !canAccessCase({ role: 'AGENT', agentScopeIds: scope }, event.insuranceCase)) {
+    return { ok: false, message: 'Follow-up não encontrado ou fora da sua carteira.' }
+  }
+  if (event.doneAt) return { ok: true } // idempotent — already done
+
+  await prisma.caseTimelineEvent.update({ where: { id: eventId }, data: { doneAt: new Date() } })
+  revalidatePath(`/agent/cases/${event.caseId}`)
+  return { ok: true }
+}
+
 const NEEDS_FIELDS: (keyof NeedsAnalysisInput)[] = [
   'annualIncome', 'incomeYears', 'mortgageBalance', 'otherDebts', 'finalExpenses',
   'children', 'educationPerChild', 'existingCoverage', 'liquidAssets',

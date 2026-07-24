@@ -76,6 +76,12 @@ function WorkCard({
   )
 }
 
+function endOfToday(now: Date): Date {
+  const d = new Date(now)
+  d.setHours(23, 59, 59, 999)
+  return d
+}
+
 function safeGroupCount(groupCount: unknown): number {
   if (groupCount && typeof groupCount === 'object' && '_all' in groupCount) {
     const countObj = groupCount as { _all?: number }
@@ -99,6 +105,7 @@ export default async function AgentDashboard() {
   let openCases = 0
   let awaitingIllustration = 0
   let openRequirements = 0
+  let dueFollowUps = 0
   let atRiskPolicies = 0
   let txnExpected = 0
   let txnPaid = 0
@@ -129,6 +136,7 @@ export default async function AgentDashboard() {
       openRequirementsCount,
       atRiskCount,
       txnByType,
+      dueFollowUpCount,
     ] = await Promise.all([
       prisma.policy.count({ where: { agentId: agent.id } }),
       prisma.commissionRecord.aggregate({ where: { agentId: agent.id }, _sum: { amount: true } }),
@@ -164,12 +172,21 @@ export default async function AgentDashboard() {
         where: { agentId: agent.id },
         _sum: { amount: true },
       }),
+      prisma.caseTimelineEvent.count({
+        where: {
+          type: 'FOLLOW_UP',
+          doneAt: null,
+          dueAt: { lte: endOfToday(now) },
+          insuranceCase: { assignedAgentId: { in: scope } },
+        },
+      }),
     ])
 
     openCases = openCasesCount
     awaitingIllustration = awaitingIllustrationCount
     openRequirements = openRequirementsCount
     atRiskPolicies = atRiskCount
+    dueFollowUps = dueFollowUpCount
     for (const t of txnByType) {
       const sum = decimalToNumber(t._sum.amount)
       if (t.type === 'EXPECTED') txnExpected = sum
@@ -202,6 +219,7 @@ export default async function AgentDashboard() {
       )}
 
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <WorkCard href="/agent/cases" label="Follow-ups pendentes" value={dueFollowUps} tone="danger" />
         <WorkCard href="/agent/cases" label="Casos ativos" value={openCases} tone="teal" />
         <WorkCard href="/agent/cases" label="Aguardando ilustração" value={awaitingIllustration} tone="gold" />
         <WorkCard href="/agent/cases" label="Requirements abertos" value={openRequirements} tone="gold" />

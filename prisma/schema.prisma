@@ -334,6 +334,8 @@ model CaseTimelineEvent {
   title     String
   body      String?
   metadata  Json?
+  dueAt     DateTime?
+  doneAt    DateTime?
   createdAt DateTime      @default(now())
 
   @@index([caseId, createdAt])

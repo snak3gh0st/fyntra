@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 import { CaseStagePill, PolicyStatusPill } from "@/components/StatusPill";
 import { caseStageLabel, type CaseStage } from "@/lib/case-workflow";
 import { computeNeedsAnalysis, type NeedsAnalysisInput } from "@/lib/needs-analysis";
-import { transitionCase, updateRequirement, startApplication, saveNeedsAnalysis } from "./actions";
+import { transitionCase, updateRequirement, startApplication, saveNeedsAnalysis, addCaseNote, addFollowUp, completeFollowUp } from "./actions";
 
 type Requirement = { id: string; title: string; status: string };
 type Application = { id: string; status: string; requirements: Requirement[] };
@@ -39,7 +39,15 @@ type CaseData = {
   illustrations: { id: string; kind: string; productName: string | null; faceAmount: string | null; premium: string | null }[];
   applications: Application[];
   policies: { id: string; policyNumber: string; carrier: string; product: string; status: string }[];
-  timeline: { id: string; title: string; body: string | null; createdAt: string }[];
+  timeline: {
+    id: string;
+    type: string;
+    title: string;
+    body: string | null;
+    createdAt: string;
+    dueAt: string | null;
+    doneAt: string | null;
+  }[];
 };
 
 const PRODUCT_LABEL: Record<string, string> = { TERM: "Term", IUL: "IUL", UNDECIDED: "A definir" };
@@ -199,6 +207,37 @@ export function CaseWorkspace({ caseData: c }: { caseData: CaseData }) {
 
   const hasApplication = c.applications.length > 0;
 
+  const [note, setNote] = useState("");
+  const [fuTitle, setFuTitle] = useState("");
+  const [fuDue, setFuDue] = useState("");
+
+  function submitNote() {
+    if (!note.trim()) return;
+    setMessage(null);
+    startTransition(async () => {
+      const result = await addCaseNote(c.id, note);
+      if (result.ok) { setNote(""); router.refresh(); } else setMessage(result.message);
+    });
+  }
+
+  function submitFollowUp() {
+    if (!fuTitle.trim() || !fuDue) return;
+    setMessage(null);
+    startTransition(async () => {
+      const result = await addFollowUp(c.id, fuTitle, fuDue);
+      if (result.ok) { setFuTitle(""); setFuDue(""); router.refresh(); } else setMessage(result.message);
+    });
+  }
+
+  function markFollowUpDone(id: string) {
+    startTransition(async () => {
+      const result = await completeFollowUp(id);
+      if (result.ok) router.refresh(); else setMessage(result.message);
+    });
+  }
+
+  const todayISO = new Date().toISOString().slice(0, 10);
+
   return (
     <div className="space-y-6">
       <Link href="/agent/cases" className="text-sm font-semibold text-teal hover:text-teal-deep">
@@ -331,17 +370,64 @@ export function CaseWorkspace({ caseData: c }: { caseData: CaseData }) {
       </Section>
 
       <Section title="Timeline">
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") submitNote(); }}
+              placeholder="Registrar nota (ligação, e-mail, decisão)…"
+              className="flex-1 rounded border border-border-steel bg-paper px-3 py-1.5 text-sm text-ink"
+            />
+            <Button variant="secondary" disabled={pending || !note.trim()} onClick={submitNote}>Anotar</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <input
+              value={fuTitle}
+              onChange={(e) => setFuTitle(e.target.value)}
+              placeholder="Agendar follow-up…"
+              className="min-w-[12rem] flex-1 rounded border border-border-steel bg-paper px-3 py-1.5 text-sm text-ink"
+            />
+            <input
+              type="date"
+              min={todayISO}
+              value={fuDue}
+              onChange={(e) => setFuDue(e.target.value)}
+              className="rounded border border-border-steel bg-paper px-3 py-1.5 text-sm text-ink"
+            />
+            <Button variant="secondary" disabled={pending || !fuTitle.trim() || !fuDue} onClick={submitFollowUp}>Agendar</Button>
+          </div>
+        </div>
+
         {c.timeline.length === 0 ? (
-          <Empty>Sem eventos ainda.</Empty>
+          <p className="mt-4 text-sm text-ink-muted">Sem eventos ainda.</p>
         ) : (
-          <ol className="space-y-3">
-            {c.timeline.map((t) => (
-              <li key={t.id} className="border-l-2 border-border-steel pl-3">
-                <p className="text-sm font-medium text-ink">{t.title}</p>
-                {t.body && <p className="text-xs text-ink-muted">{t.body}</p>}
-                <p className="text-xs text-ink-muted">{new Date(t.createdAt).toLocaleString("pt-BR")}</p>
-              </li>
-            ))}
+          <ol className="mt-4 space-y-3">
+            {c.timeline.map((t) => {
+              const isFollowUp = t.type === "FOLLOW_UP";
+              const open = isFollowUp && !t.doneAt;
+              const overdue = open && t.dueAt != null && new Date(t.dueAt) < new Date();
+              return (
+                <li key={t.id} className={`border-l-2 pl-3 ${overdue ? "border-danger" : open ? "border-gold" : "border-border-steel"}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-ink">
+                        {isFollowUp && <span aria-hidden>🔔 </span>}{t.title}
+                        {t.doneAt && <span className="ml-2 text-xs font-normal text-success">✓ concluído</span>}
+                        {overdue && <span className="ml-2 text-xs font-normal text-danger">atrasado</span>}
+                      </p>
+                      {t.body && <p className="text-xs text-ink-muted">{t.body}</p>}
+                      <p className="text-xs text-ink-muted">
+                        {t.dueAt ? `Vence ${new Date(t.dueAt).toLocaleDateString("pt-BR")}` : new Date(t.createdAt).toLocaleString("pt-BR")}
+                      </p>
+                    </div>
+                    {open && (
+                      <Button variant="secondary" disabled={pending} onClick={() => markFollowUpDone(t.id)}>Concluir</Button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         )}
       </Section>
