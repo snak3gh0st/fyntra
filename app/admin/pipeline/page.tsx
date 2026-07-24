@@ -1,0 +1,93 @@
+export const dynamic = 'force-dynamic'
+
+import { prisma } from '@/lib/prisma'
+import { requireRole } from '@/lib/require-role'
+import { buildPipelineFunnel } from '@/lib/pipeline-bi'
+import { caseStageLabel, caseStageTone } from '@/lib/case-workflow'
+import { bucketByMonth } from '@/lib/dashboard'
+import { Shell } from '@/components/Shell'
+import { PageHeader } from '@/components/PageHeader'
+import { StatCard } from '@/components/StatCard'
+import { TrendChart } from '@/components/TrendChart'
+
+const usd = (v: number) =>
+  v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`
+
+const BAR_TONE: Record<string, string> = {
+  success: 'bg-success',
+  warning: 'bg-gold',
+  danger: 'bg-danger',
+  neutral: 'bg-teal',
+}
+
+export default async function PipelinePage() {
+  const session = await requireRole('ADMIN')
+
+  const cases = await prisma.insuranceCase.findMany({
+    select: { stage: true, targetCoverage: true, monthlyBudget: true, createdAt: true },
+  })
+
+  const funnel = buildPipelineFunnel(
+    cases.map((c) => ({
+      stage: c.stage,
+      targetCoverage: c.targetCoverage?.toNumber() ?? null,
+      monthlyBudget: c.monthlyBudget?.toNumber() ?? null,
+    })),
+  )
+
+  const trend = bucketByMonth(cases.map((c) => c.createdAt), 6, new Date()).map((b) => ({
+    label: b.month.slice(5),
+    value: b.count,
+  }))
+
+  const maxStage = Math.max(1, ...funnel.byStage.map((s) => s.count))
+
+  return (
+    <Shell role="ADMIN" userName={session.user.name}>
+      <PageHeader
+        title="Pipeline de casos"
+        eyebrow="Gestão"
+        description="Visão executiva do funil de casos, conversão e valor em andamento."
+      />
+
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Total de casos" value={funnel.total} />
+        <StatCard label="Em andamento" value={funnel.open} />
+        <StatCard label="Win rate" value={`${(funnel.winRate * 100).toFixed(0)}%`} emphasis />
+        <StatCard label="Emitidos" value={funnel.placed} />
+        <StatCard label="Cobertura em pipeline" value={usd(funnel.inFlightCoverage)} />
+        <StatCard label="Orçamento mensal em pipeline" value={`${usd(funnel.inFlightBudget)}/m`} />
+        <StatCard label="Recusados" value={funnel.declined} />
+        <StatCard label="Retirados" value={funnel.withdrawn} />
+      </div>
+
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="rounded-lg border border-border-steel bg-paper p-6">
+          <h2 className="text-base font-semibold text-ink">Funil por etapa</h2>
+          <ul className="mt-5 space-y-2.5">
+            {funnel.byStage.map((s) => (
+              <li key={s.stage} className="grid grid-cols-[150px_1fr_2.5rem] items-center gap-3">
+                <span className="text-sm text-ink-muted">{caseStageLabel[s.stage]}</span>
+                <div className="h-5 rounded bg-panel">
+                  <div
+                    className={`h-5 rounded ${BAR_TONE[caseStageTone(s.stage)]}`}
+                    style={{ width: `${Math.round((s.count / maxStage) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-right font-mono text-sm tabular-nums text-ink">{s.count}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <aside className="rounded-lg border border-border-steel bg-paper p-6">
+          <h2 className="text-base font-semibold text-ink">Novos casos por mês</h2>
+          <p className="mt-1 text-sm text-ink-muted">Últimos 6 meses.</p>
+          <div className="mt-4">
+            <TrendChart data={trend} format="count" />
+          </div>
+        </aside>
+      </div>
+    </Shell>
+  )
+}

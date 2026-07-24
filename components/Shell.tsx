@@ -26,6 +26,7 @@ const NAV: Record<"ADMIN" | "AGENT" | "CLIENT", NavItem[]> = {
   ADMIN: [
     { href: "/admin", label: "Painel", icon: "grid" },
     { href: "/admin/agents", label: "Hierarquia", icon: "hierarchy" },
+    { href: "/admin/pipeline", label: "Pipeline", icon: "layers" },
     { href: "/admin/production", label: "Produção", icon: "chart" },
     { href: "/admin/commission-plans", label: "Planos de comissão", icon: "layers" },
     { href: "/admin/import", label: "Importar dados", icon: "upload" },
@@ -45,6 +46,7 @@ const NAV: Record<"ADMIN" | "AGENT" | "CLIENT", NavItem[]> = {
 const PAGE_NAMES: Record<string, string> = {
   "/admin": "Painel administrativo",
   "/admin/agents": "Agentes e hierarquia",
+  "/admin/pipeline": "Pipeline de casos",
   "/admin/production": "Produção por agente",
   "/admin/commission-plans": "Planos de comissão",
   "/admin/import": "Importar dados",
