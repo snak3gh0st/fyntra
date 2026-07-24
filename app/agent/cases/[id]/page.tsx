@@ -45,6 +45,11 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
           carrier: c.carrier,
           targetCoverage: money(c.targetCoverage),
           monthlyBudget: money(c.monthlyBudget),
+          needsAnalysis: c.needsAnalysis as {
+            input: Record<string, number>
+            result: { grossNeed: number; resources: number; recommendedCoverage: number }
+            savedAt: string
+          } | null,
           nextStages: allowedTransitions(c.stage),
           prospect: {
             name: `${c.prospect.firstName} ${c.prospect.lastName}`.trim(),

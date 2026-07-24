@@ -5,6 +5,7 @@ import { getCurrentAgent } from '@/lib/agent-context'
 import { getDownlineIds } from '@/lib/hierarchy'
 import { canAccessCase } from '@/lib/case-access'
 import { canTransitionCase, caseStageLabel, type CaseStage } from '@/lib/case-workflow'
+import { computeNeedsAnalysis, type NeedsAnalysisInput } from '@/lib/needs-analysis'
 import { revalidatePath } from 'next/cache'
 
 type ActionResult = { ok: true } | { ok: false; message: string }
@@ -99,6 +100,53 @@ export async function startApplication(caseId: string): Promise<ActionResult> {
         type: 'APPLICATION_STARTED',
         title: 'Aplicação iniciada',
         body: `Checklist padrão criado com ${STANDARD_REQUIREMENTS.length} requirements.`,
+      },
+    }),
+  ])
+
+  revalidatePath(`/agent/cases/${caseId}`)
+  return { ok: true }
+}
+
+const NEEDS_FIELDS: (keyof NeedsAnalysisInput)[] = [
+  'annualIncome', 'incomeYears', 'mortgageBalance', 'otherDebts', 'finalExpenses',
+  'children', 'educationPerChild', 'existingCoverage', 'liquidAssets',
+]
+
+export async function saveNeedsAnalysis(
+  caseId: string,
+  raw: Record<string, number>,
+): Promise<ActionResult> {
+  const { scope } = await agentScopeIds()
+
+  const insuranceCase = await prisma.insuranceCase.findUnique({
+    where: { id: caseId },
+    select: { id: true, assignedAgentId: true },
+  })
+  if (!insuranceCase || !canAccessCase({ role: 'AGENT', agentScopeIds: scope }, insuranceCase)) {
+    return { ok: false, message: 'Caso não encontrado ou fora da sua carteira.' }
+  }
+
+  // Coerce every field to a finite number; the calc itself floors negatives.
+  const input = Object.fromEntries(
+    NEEDS_FIELDS.map((f) => [f, Number(raw[f]) || 0]),
+  ) as unknown as NeedsAnalysisInput
+  const result = computeNeedsAnalysis(input)
+
+  await prisma.$transaction([
+    prisma.insuranceCase.update({
+      where: { id: caseId },
+      data: {
+        needsAnalysis: { input, result, savedAt: new Date().toISOString() },
+        targetCoverage: result.recommendedCoverage,
+      },
+    }),
+    prisma.caseTimelineEvent.create({
+      data: {
+        caseId,
+        type: 'NEEDS_ANALYSIS',
+        title: 'Needs analysis atualizada',
+        body: `Cobertura recomendada: $${result.recommendedCoverage.toLocaleString('en-US')}.`,
       },
     }),
   ])

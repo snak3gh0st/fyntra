@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { CaseStagePill, PolicyStatusPill } from "@/components/StatusPill";
 import { caseStageLabel, type CaseStage } from "@/lib/case-workflow";
-import { transitionCase, updateRequirement, startApplication } from "./actions";
+import { computeNeedsAnalysis, type NeedsAnalysisInput } from "@/lib/needs-analysis";
+import { transitionCase, updateRequirement, startApplication, saveNeedsAnalysis } from "./actions";
 
 type Requirement = { id: string; title: string; status: string };
 type Application = { id: string; status: string; requirements: Requirement[] };
@@ -20,6 +21,11 @@ type CaseData = {
   carrier: string | null;
   targetCoverage: string | null;
   monthlyBudget: string | null;
+  needsAnalysis: {
+    input: Record<string, number>;
+    result: { grossNeed: number; resources: number; recommendedCoverage: number };
+    savedAt: string;
+  } | null;
   nextStages: CaseStage[];
   prospect: {
     name: string;
@@ -66,6 +72,94 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-ink-muted">{children}</p>;
+}
+
+const NEEDS_FIELDS: { key: keyof NeedsAnalysisInput; label: string }[] = [
+  { key: "annualIncome", label: "Renda anual ($)" },
+  { key: "incomeYears", label: "Anos de reposição de renda" },
+  { key: "mortgageBalance", label: "Saldo da hipoteca ($)" },
+  { key: "otherDebts", label: "Outras dívidas ($)" },
+  { key: "finalExpenses", label: "Despesas finais ($)" },
+  { key: "children", label: "Filhos" },
+  { key: "educationPerChild", label: "Educação por filho ($)" },
+  { key: "existingCoverage", label: "Cobertura existente ($)" },
+  { key: "liquidAssets", label: "Ativos líquidos ($)" },
+];
+
+const usd = (v: number) => `$${v.toLocaleString("en-US")}`;
+
+function NeedsAnalysisForm({
+  caseId,
+  saved,
+  pending,
+  onSaved,
+  onError,
+}: {
+  caseId: string;
+  saved: CaseData["needsAnalysis"];
+  pending: boolean;
+  onSaved: () => void;
+  onError: (m: string) => void;
+}) {
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      NEEDS_FIELDS.map((f) => [
+        f.key,
+        String(saved?.input?.[f.key] ?? (f.key === "incomeYears" ? 10 : 0)),
+      ]),
+    ),
+  );
+  const [saving, startSave] = useTransition();
+
+  const input = Object.fromEntries(
+    NEEDS_FIELDS.map((f) => [f.key, Number(values[f.key]) || 0]),
+  ) as unknown as NeedsAnalysisInput;
+  const preview = computeNeedsAnalysis(input);
+
+  function save() {
+    onError("");
+    startSave(async () => {
+      const result = await saveNeedsAnalysis(caseId, input as unknown as Record<string, number>);
+      if (result.ok) onSaved();
+      else onError(result.message);
+    });
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        {NEEDS_FIELDS.map((f) => (
+          <label key={f.key} className="block">
+            <span className="text-xs text-ink-muted">{f.label}</span>
+            <input
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={values[f.key]}
+              onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+              className="mt-1 w-full rounded border border-border-steel bg-paper px-2 py-1 text-sm text-ink"
+            />
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-teal-pale px-4 py-3">
+        <div className="text-sm text-ink-muted">
+          Necessidade bruta {usd(preview.grossNeed)} − recursos {usd(preview.resources)}
+        </div>
+        <div className="text-lg font-semibold text-ink">
+          Recomendado: {usd(preview.recommendedCoverage)}
+        </div>
+      </div>
+      <Button variant="primary" disabled={pending || saving} onClick={save}>
+        {saved ? "Recalcular e salvar" : "Salvar needs analysis"}
+      </Button>
+      {saved && (
+        <p className="text-xs text-ink-muted">
+          Última atualização: {new Date(saved.savedAt).toLocaleString("pt-BR")} · define a cobertura-alvo do caso.
+        </p>
+      )}
+    </div>
+  );
 }
 
 export function CaseWorkspace({ caseData: c }: { caseData: CaseData }) {
@@ -150,6 +244,16 @@ export function CaseWorkspace({ caseData: c }: { caseData: CaseData }) {
           <div><dt className="text-xs text-ink-muted">Cobertura alvo</dt><dd className="text-sm text-ink">{c.targetCoverage ? `$${c.targetCoverage}` : "—"}</dd></div>
           <div><dt className="text-xs text-ink-muted">Orçamento mensal</dt><dd className="text-sm text-ink">{c.monthlyBudget ? `$${c.monthlyBudget}/m` : "—"}</dd></div>
         </dl>
+      </Section>
+
+      <Section title="Needs analysis">
+        <NeedsAnalysisForm
+          caseId={c.id}
+          saved={c.needsAnalysis}
+          pending={pending}
+          onSaved={() => router.refresh()}
+          onError={(m) => setMessage(m || null)}
+        />
       </Section>
 
       <Section title="Ilustrações">

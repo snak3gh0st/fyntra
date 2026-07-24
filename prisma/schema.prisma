@@ -240,6 +240,7 @@ model InsuranceCase {
   objective       String?
   targetCoverage  Decimal?
   monthlyBudget   Decimal?
+  needsAnalysis   Json?
   carrier         String?
   productType     String?
   createdAt       DateTime    @default(now())
